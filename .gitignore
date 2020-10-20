@@ -3,3 +3,7 @@
 ################################################################################
 
 /Release
+/.vs/MyFanControl/v16
+/Debug
+/MyFanControl/Debug
+/MyFanControl/Release

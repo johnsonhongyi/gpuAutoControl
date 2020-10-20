@@ -562,7 +562,7 @@ void CCore::Work()
 	if (m_config.TakeOver)
 	{
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 50 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
+		if (m_GpuInfo.m_nGPU_Util > 30 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
 		{
 			//占用率<88
 			m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
@@ -570,14 +570,16 @@ void CCore::Work()
 			int count_time = m_config.TakeOverDown * m_config.UpdateInterval;
 			if (count_time > limitTime)
 			{
-				limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown)) / 100);
+				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //降频为占用率上限
+				limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //降频0.95
+
 				if (limitClock > baseClockLimit)
 				{
 					m_config.LockGPUFrequency = 1;
-					m_config.TakeOverDown = 0;
-					m_config.TakeOverUp = 0;
 					m_config.GPUFrequency = limitClock;
 				}
+				m_config.TakeOverDown = 0;
+				m_config.TakeOverUp = 0;
 			}
 		}
 		else
