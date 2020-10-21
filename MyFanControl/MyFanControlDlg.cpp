@@ -514,6 +514,18 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 				m_ctlFrequency.SetWindowTextA(str);
 			}
 		}
+		else
+		{
+			int lf = m_ctlLockGpuFrequancy.GetCheck();
+			if (lf ^ m_core.m_config.LockGPUFrequency)
+			{
+				m_ctlLockGpuFrequancy.SetCheck(FALSE);
+				char str[256];
+				sprintf_s(str, 256, "%d", m_core.m_config.GPUFrequency);
+				m_ctlFrequency.SetWindowTextA(str);
+			}
+
+		}
 
 	if (!bFull)
 		return;
