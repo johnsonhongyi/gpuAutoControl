@@ -131,8 +131,8 @@ public:
 	int downClockPercent;//占用率降频阈值
 	int downTemplimit;//温控降频阈值
 	int upTemplimit;//温控升频阈值
-	int upClocklimit;//温控升频阈值
-	int timelimit;//温控升频阈值
+	int upClocklimit;//温控频率阈值
+	int timelimit;//温控周期阈值
 
 
 public:

@@ -299,10 +299,10 @@ void CConfig::LoadDefault()
 	//int upTemplimit;//温控升频阈值
 	upClockPercent = 96;//占用率升频阈值
 	downClockPercent = 89;//占用率降频阈值
-	downTemplimit = 80;//温控降频阈值
-	upTemplimit = 76;//温控升频阈值
+	downTemplimit = 82;//温控降频阈值
+	upTemplimit = 79;//温控升频阈值
 	upClocklimit = 1600; //升频上限
-	timelimit = 9;    //统计时长
+	timelimit = 3;    //统计时长
 
 	int i = 0;
 	DutyList[0][i++] = upClockPercent;//90+  //占用率升频阈值
@@ -567,8 +567,8 @@ void CCore::Work()
 			//占用率<88
 			m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
 			m_config.TakeOverDown += 1;
-			int count_time = m_config.TakeOverDown * m_config.UpdateInterval;
-			if (count_time > limitTime)
+			//int count_time = m_config.TakeOverDown * m_config.UpdateInterval; //使用周期*时间统计
+			if (m_config.TakeOverDown >= limitTime)
 			{
 				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //降频为占用率上限
 				limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //降频0.95
@@ -589,11 +589,11 @@ void CCore::Work()
 				//锁定情况下占用率持续大于97后升频
 			{
 				m_config.TakeOverUp += 1;
-				int count_time = m_config.TakeOverUp * m_config.UpdateInterval;
+				//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
 				
 
 				//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
-				if (count_time > limitTime)
+				if (m_config.TakeOverUp >= limitTime)
 				{
 
 					if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
