@@ -581,9 +581,9 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	char str[256];
 	m_ctlInterval.GetWindowTextA(str,256);
 	int nInterval = atoi(str);
-	if (nInterval < 1 || nInterval > 30)
+	if (nInterval < 1 || nInterval > 300)
 	{
-		AfxMessageBox("更新间隔必须为1-30");
+		AfxMessageBox("更新间隔必须为1-300");
 		return FALSE;
 	}
 	//
@@ -597,9 +597,9 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	//
 	m_ctlForceTemp.GetWindowTextA(str, 256);
 	int nForceTemp = atoi(str);
-	if (nForceTemp < 40 || nForceTemp > 175)
+	if (nForceTemp < 0 || nForceTemp > 225)
 	{
-		//AfxMessageBox("强制冷却温度必须为40-90");
+		//AfxMessageBox("强制冷却温度必须为0-225");
 		AfxMessageBox("GPU超频过高");
 		return FALSE;
 	}
@@ -621,13 +621,38 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		{
 			GetDlgItem(m_nDutyEditCtlID[i][j])->GetWindowTextA(str, 256);
 			nDutyList[i][j] = atoi(str);
-			if ( j ^ 4 && (nDutyList[i][j]<0 || nDutyList[i][j]>100))
+			if ( j ^ 4 && j ^ 5 )
 			{
-				char str2[256];
-				sprintf_s(str2, 256, "%s风扇转速设定错误，必须为0-100",i?"GPU":"CPU");
-				AfxMessageBox(str2);
-				return FALSE;
+				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>100))
+				{
+					char str2[256];
+					sprintf_s(str2, 256, "%s设定错误，必须为0-100", i ? "CPU" : "GPU");
+					AfxMessageBox(str2);
+					return FALSE;
+				}
+				else
+				{
+					if (j == 3 && nDutyList[i][j-1] < nDutyList[i][j])
+					{
+						char str2[256];
+						sprintf_s(str2, 256, "%s温控错误，恒定温度:%d必须小于温控降频:%d", i ? "CPU" : "GPU", nDutyList[i][j], nDutyList[i][j-1]);
+						AfxMessageBox(str2);
+						return FALSE;
+					}
+
+				}
+
 			}
+			//else
+			//{
+			//	char str2[256];
+			//	if (j == 5 && nDutyList[i][j] < m_core.m_config.UpdateInterval)
+			//	{
+			//		sprintf_s(str2, 256, "%s设定错误,Timelimit必须大于刷新时间:%d",i ? "CPU" : "GPU", m_core.m_config.UpdateInterval);
+			//		AfxMessageBox(str2);
+			//		return FALSE;
+			//	}
+			//}
 		}
 	}
 	//
