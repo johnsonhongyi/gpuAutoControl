@@ -803,6 +803,14 @@ void CMyFanControlDlg::OnBnClickedCheckTakeover()
 	// TODO:  在此添加控件通知处理程序代码
 	int val = m_ctlTakeOver.GetCheck();
 	m_core.m_config.TakeOver = val;
+	if (!val)
+	{
+		m_core.m_config.LockGPUFrequency = 0;
+		m_ctlLockGpuFrequancy.SetCheck(FALSE);
+		char str[256];
+		sprintf_s(str, 256, "%d", m_core.m_GpuInfo.m_nLockClock);
+		m_ctlFrequency.SetWindowTextA(str);
+	}
 }
 
 

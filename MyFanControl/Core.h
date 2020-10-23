@@ -64,7 +64,8 @@ public:
 	//int m_nOverClock; //添加超频时钟
 	//int m_nUsage;//使用率
 	int ForcedRefreshGPU;//save重置GPU频率
-
+	int m_nLockClock;//已设置的最大核心频率
+	int m_nOverLockClock;//已设置的最大核心频率
 public:
 	BOOL Update();//更新GPU频率和使用率
 	BOOL LockFrequency(int frequency = 0);//锁定最大频率，可以用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
@@ -72,8 +73,8 @@ public:
 
 protected:
 	HMODULE m_hGPUdll;
-	int m_nLockClock;//已设置的最大核心频率
-	int m_nOverLockClock;//已设置的最大核心频率
+	//int m_nLockClock;//已设置的最大核心频率
+	//int m_nOverLockClock;//已设置的最大核心频率
 	//接口函数
 	In_0_Out_n_Func *m_pfnInitGPU_API;
 	In_1_Out_n_Func *m_pfnSet_GPU_Number;
