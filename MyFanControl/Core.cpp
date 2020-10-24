@@ -217,7 +217,12 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	////
 	int rv3 = (m_pfnLock_Frequency(0, GpuClock) == 0x19);
 	if (!rv3)
-		AfxMessageBox("Lock_Frequency ß∞‹:" + GpuClock);
+	{
+		CString str;
+		str.Format("Lock_Frequency ß∞‹:%d", GpuClock);
+		AfxMessageBox(str);
+		//AfxMessageBox("Lock_Frequency ß∞‹:" + GpuClock);
+	}
 	////
 	//int rv4 = 1;
 	////int rv4 = (m_pfnLock_Frequency_MEM(0, MemClock) == 0x19);
@@ -264,13 +269,23 @@ BOOL CGPUInfo::OverClockFrequency(int frequency,int memOverClock)
 	//
 	int rv1 = (m_pfnSet_CoreOC(0, GpuOverclock) == 0);
 	if (!rv1)
-		AfxMessageBox("Set_CoreOC ß∞‹:"+ GpuOverclock);
+	{
+		CString str;
+		str.Format("Set_CoreOC ß∞‹:%d", GpuOverclock);
+		AfxMessageBox(str);
+		//AfxMessageBox("Set_CoreOC ß∞‹:"+ GpuOverclock);
+	}
 	//
 	//int rv2 = 1;
 
 	int rv2 = (m_pfnSet_MEMOC(0, MemOverclock) == 0);
 	if (!rv2)
-		AfxMessageBox("Set_MEMOC ß∞‹:"+ MemOverclock);
+	{
+		CString str;
+		str.Format("Set_MEMOC ß∞‹:%d", MemOverclock);
+		AfxMessageBox(str);
+		//AfxMessageBox("Set_MEMOC ß∞‹:"+ MemOverclock);
+	}
 	
 
 	//int rv3 = (m_pfnLock_Frequency(0, GpuClock) == 0x19);
