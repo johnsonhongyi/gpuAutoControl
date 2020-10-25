@@ -172,10 +172,13 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 {
 	if (!m_hGPUdll)
 		return FALSE;
-	if (frequency < 0 || frequency > m_nMaxFrequency)
-		return FALSE;
 	if (frequency == 0)
 		frequency = m_nStandardFrequency;
+
+	//if (frequency < 0 || frequency > m_nMaxFrequency)
+	if (frequency < m_nBaseClock || frequency > m_nMaxFrequency)
+		return FALSE;
+
 	if (m_nLockClock == frequency)
 		if (ForcedRefreshGPU == 0)
 			return TRUE;
@@ -187,7 +190,8 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	int GpuClock = 0;
 
 	//int MemClock = 0;
-	if (frequency > 0 && frequency < m_nStandardFrequency)
+	//if (frequency > 0 && frequency < m_nStandardFrequency)
+	if (frequency > m_nBaseClock && frequency < m_nStandardFrequency)
 	{
 		//降频
 		GpuClock = frequency;
@@ -312,8 +316,8 @@ void CConfig::LoadDefault()
 	//int downClockPercent;//占用率降频阈值
 	//int downTemplimit;//温控降频阈值
 	//int upTemplimit;//温控升频阈值
-	upClockPercent = 96;//占用率升频阈值
-	downClockPercent = 89;//占用率降频阈值
+	upClockPercent = 93;//占用率升频阈值
+	downClockPercent = 82;//占用率降频阈值
 	downTemplimit = 82;//温控降频阈值
 	upTemplimit = 79;//温控升频阈值
 	upClocklimit = 1600; //升频上限
