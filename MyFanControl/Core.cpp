@@ -317,7 +317,7 @@ void CConfig::LoadDefault()
 	//int downTemplimit;//温控降频阈值
 	//int upTemplimit;//温控升频阈值
 	upClockPercent = 93;//占用率升频阈值
-	downClockPercent = 82;//占用率降频阈值
+	downClockPercent = 80;//占用率降频阈值
 	downTemplimit = 82;//温控降频阈值
 	upTemplimit = 79;//温控升频阈值
 	upClocklimit = 1600; //升频上限
@@ -581,7 +581,7 @@ void CCore::Work()
 	if (m_config.TakeOver)
 	{
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 30 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
+		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit * 1.05)
 		{
 			//占用率<88
 			m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
