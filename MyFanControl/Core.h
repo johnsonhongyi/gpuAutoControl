@@ -44,6 +44,7 @@ public:
 	//int m_nGet_GPU_Pstate_Freq;
 	//int m_nGet_GPU_Volt;
 	//int m_nCheckGPU_Thermal;
+	int m_nGet_GPU_TotalNumber;
 	int m_nGet_GPU_ALLInfo;
 	int m_nGPU_Temp;
 	int m_nGPU_Util;
@@ -79,12 +80,17 @@ protected:
 	In_0_Out_n_Func *m_pfnInitGPU_API;
 	In_1_Out_n_Func *m_pfnSet_GPU_Number;
 	In_0_Out_n_Func *m_pfnGet_GPU_Base_Clock;
-	In_0_Out_n_Func	*m_pfnGet_GPU_Pstate;
-	In_0_Out_n_Func	*m_pfnGet_GPU_F;
-	In_0_Out_n_Func	*m_pfnGet_GPU_Pstate_Freq;
-	In_0_Out_n_Func	*m_pfnGet_GPU_Volt;
-	In_0_Out_n_Func *m_pfnCheckGPU_Thermal;
+
+	//John add
+
+	//In_0_Out_n_Func	*m_pfnGet_GPU_Pstate;
+	//In_0_Out_n_Func	*m_pfnGet_GPU_F;
+	//In_0_Out_n_Func	*m_pfnGet_GPU_Pstate_Freq;
+	//In_0_Out_n_Func	*m_pfnGet_GPU_Volt;
+	//In_0_Out_n_Func *m_pfnCheckGPU_Thermal;
 	In_0_Out_n_Func *m_pfnGet_GPU_ALLInfo;
+
+
 	In_0_Out_n_Func *m_pfnGet_GPU_Temp;
 	In_0_Out_n_Func *m_pfnGet_GPU_Boost_Clock;
 	In_0_Out_n_Func *m_pfnCheck_GPU_VRAM_Clock;
@@ -127,6 +133,7 @@ public:
 	int GPUOverMEMClock;//GPU显存
 	int TakeOverDown;//动态控制计数器
 	int TakeOverUp;//动态控制计数器
+	int TakeOverLock;//动态Lock计数器
 	int upClockPercent;//占用率升频阈值
 	int downClockPercent;//占用率降频阈值
 	int downTemplimit;//温控降频阈值

@@ -76,6 +76,7 @@ CGPUInfo::CGPUInfo()
 	//m_pfnGet_GPU_Volt = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Volt");
 	//m_pfnCheckGPU_Thermal = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "CheckGPU_Thermal");
 	m_pfnGet_GPU_ALLInfo = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_defaultMaxTemp");
+	//m_pfnGet_GPU_TotalNumber = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_TotalNumber");
 	m_pfnGet_GPU_Temp = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Temp");
 	//
 
@@ -110,7 +111,7 @@ CGPUInfo::CGPUInfo()
 	}
 	m_pfnSet_GPU_Number(0);
 	m_nBaseClock = m_pfnGet_GPU_Base_Clock();
-
+	m_nGet_GPU_TotalNumber = m_pfnGet_GPU_TotalNumber();
 	//add new 
 
 	//m_nGet_GPU_Pstate = m_pfnGet_GPU_F();
@@ -122,7 +123,7 @@ CGPUInfo::CGPUInfo()
 	//m_nGPU_Temp = m_pfnGet_GPU_Temp();
 	//m_nGPU_Util = m_pfnGet_GPU_Util();
 	m_nGPU_UtilCount = 0;
-	m_nGet_GPU_ALLInfo = m_pfnGet_GPU_ALLInfo();
+	//m_nGet_GPU_ALLInfo = m_pfnGet_GPU_ALLInfo();
 	m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
 	m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
 	//
@@ -166,6 +167,19 @@ BOOL CGPUInfo::Update()
 	m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
 	m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
 	m_nGPU_Util = m_pfnGet_GPU_Util();
+	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
+	{
+		m_pfnCloseGPU_API();
+
+		if (m_pfnInitGPU_API())
+		{
+			TRACE0("InitGPU_API初始化失败。\n");
+			FreeLibrary(m_hGPUdll);
+			m_hGPUdll = NULL;
+			return FALSE;
+		}
+	}
+
 	return TRUE;
 }
 BOOL CGPUInfo::LockFrequency(int frequency)
@@ -350,6 +364,7 @@ void CConfig::LoadDefault()
 	GPUOverMEMClock = 0;
 	TakeOverDown = 0;
 	TakeOverUp = 0;
+	TakeOverLock = 0;
 }
 void CConfig::LoadConfig()
 {
@@ -581,10 +596,10 @@ void CCore::Work()
 	if (m_config.TakeOver)
 	{
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit * 1.05)
+		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit * 1.02)
 		{
 			//占用率<88
-			m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
+			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
 			m_config.TakeOverDown += 1;
 			//int count_time = m_config.TakeOverDown * m_config.UpdateInterval; //使用周期*时间统计
 			if (m_config.TakeOverDown >= limitTime)
@@ -599,60 +614,82 @@ void CCore::Work()
 				}
 				m_config.TakeOverDown = 0;
 				m_config.TakeOverUp = 0;
+				m_config.TakeOverLock = 0;
 			}
 		}
 		else
 		{
 			//if (m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit && m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-			if (m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-				//锁定情况下占用率持续大于97后升频
-			{
-				m_config.TakeOverUp += 1;
-				//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
-				
-
-				//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
-				if (m_config.TakeOverUp >= limitTime)
+			if (m_config.LockGPUFrequency ^ 0)
+				//锁定情况下
+			{    
+				if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
+					//占用率持续大于97后升频and 频率高于1080
 				{
+					m_config.TakeOverUp += 1;
+					//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
 
-					if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
+
+					//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
+					if (m_config.TakeOverUp >= limitTime)
 					{
-						limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.08);
-					}
-					else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //判断当前温度大于升频温度75度 小于82维持不变
-					{
-						limitClock = m_GpuInfo.m_nGraphicsClock;
-					}
-					else
-					{
-						limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //锁频后温度高于82降频
-						if (limitClock < baseClockLimit)
+
+						if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
 						{
-							limitClock = baseClockLimit;
+							limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.08);
 						}
-
-					}
-					//if (limitClock < m_GpuInfo.m_nStandardFrequency || limitClock < 1600)
-					limitClock = ((limitClock + 5) / 10) * 10;
-
-					if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
-					{
-						m_config.GPUFrequency = limitClock;
-					}
-					else
-					{
-						if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
+						else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //判断当前温度大于升频温度75度 小于82维持不变
 						{
-							m_config.LockGPUFrequency = 0;
+							limitClock = m_GpuInfo.m_nGraphicsClock;
 						}
+						else
+						{
+							limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //锁频后温度高于82降频
+							if (limitClock < baseClockLimit)
+							{
+								limitClock = baseClockLimit;
+							}
+
+						}
+						//if (limitClock < m_GpuInfo.m_nStandardFrequency || limitClock < 1600)
+						limitClock = ((limitClock + 5) / 10) * 10;
+
+						if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
+						{
+							m_config.GPUFrequency = limitClock;
+						}
+						else
+						{
+							if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
+							{
+								m_config.LockGPUFrequency = 0;
+							}
+						}
+						m_config.TakeOverUp = 0;
+						m_config.TakeOverDown = 0;
+						m_config.TakeOverLock = 0;
 					}
-					m_config.TakeOverUp = 0;
-					m_config.TakeOverDown = 0;
 				}
-				//else
-				//{
-				//	m_config.TakeOverUp += 1;
-				//}
+				else
+				{
+					if (m_GpuInfo.m_nGPU_Util < 35 && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
+						//锁定情况 Util <35 and 温度小于限温 放开锁定 
+					{
+						m_config.TakeOverLock += 1;
+						if (m_config.TakeOverLock >= limitTime)
+							//计数Times
+						{
+							m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
+							m_config.GPUFrequency = 0;
+							m_config.TakeOverUp = 0;
+							m_config.TakeOverDown = 0;
+							m_config.TakeOverLock = 0;
+
+						}
+					}
+					
+
+				}
 			}
 			else
 			{
@@ -671,6 +708,10 @@ void CCore::Work()
 					}
 					m_config.LockGPUFrequency = 1;  //温度过高后降频锁定
 					m_config.GPUFrequency = limitClock;
+
+					m_config.TakeOverUp = 0;
+					m_config.TakeOverDown = 0;
+					m_config.TakeOverLock = 0;
 				}
 			}
 		}
