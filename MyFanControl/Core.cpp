@@ -55,19 +55,44 @@ CString GetExePath(){
 
 CGPUInfo::CGPUInfo()
 {
+	if (Init())
+	{
+		Update();
+
+		TRACE0("成功加载NVGPU_DLL.dll。\n");
+
+	}
+	//
+
+}
+
+
+CGPUInfo::~CGPUInfo()
+{
+	if (m_hGPUdll != NULL)
+	{
+		LockFrequency();//还原GPU频率设置
+		m_pfnCloseGPU_API();
+		FreeLibrary(m_hGPUdll);
+		m_hGPUdll = NULL;
+	}
+}
+
+BOOL CGPUInfo::Init()
+{
 	TRACE0("开始加载NVGPU_DLL.dll。\n");
 	m_hGPUdll = NULL;
 	CString dllpth = GetExePath() + "\\NVGPU_DLL.dll";
 	m_hGPUdll = LoadLibrary(dllpth);
 	if (m_hGPUdll == NULL)
 	{
-		TRACE0("无法加载" + dllpth+"\n");
-		return;
+		TRACE0("无法加载" + dllpth + "\n");
+		return FALSE;
 	}
 
-	m_pfnInitGPU_API = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "InitGPU_API");
-	m_pfnSet_GPU_Number = (In_1_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Set_GPU_Number");
-	m_pfnGet_GPU_Base_Clock = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Base_Clock");
+	m_pfnInitGPU_API = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "InitGPU_API");
+	m_pfnSet_GPU_Number = (In_1_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Set_GPU_Number");
+	m_pfnGet_GPU_Base_Clock = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Base_Clock");
 
 	//add new
 	//m_pfnGet_GPU_Pstate = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Pstate");
@@ -75,39 +100,37 @@ CGPUInfo::CGPUInfo()
 	//m_pfnGet_GPU_Pstate_Freq = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Pstate_Freq");
 	//m_pfnGet_GPU_Volt = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Volt");
 	//m_pfnCheckGPU_Thermal = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "CheckGPU_Thermal");
-	m_pfnGet_GPU_ALLInfo = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_defaultMaxTemp");
+	m_pfnGet_GPU_ALLInfo = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_defaultMaxTemp");
 	//m_pfnGet_GPU_TotalNumber = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_TotalNumber");
-	m_pfnGet_GPU_Temp = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Temp");
+	m_pfnGet_GPU_Temp = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Temp");
 	//
 
-	m_pfnGet_GPU_Boost_Clock = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Boost_Clock");
-	m_pfnCheck_GPU_VRAM_Clock = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Check_GPU_VRAM_Clock");
-	m_pfnGet_GPU_Graphics_Clock = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Graphics_Clock");
-	m_pfnGet_GPU_Memory_Clock = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Memory_Clock");
-	m_pfnGet_Memory_OC_max = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_Memory_OC_max");
-	m_pfnGet_GPU_Util = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Util");
-	m_pfnGet_GPU_name = (In_0_Out_s_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_name");
-	m_pfnGet_GPU_TotalNumber = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_TotalNumber");
-	m_pfnGet_GPU_Overclock_range = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_range");
-	m_pfnGet_Memory_range = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_Memory_range");
-	m_pfnGet_GPU_Overclock_rangeMax = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_rangeMax");
-	m_pfnGet_GPU_Overclock_rangeMin = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_rangeMin");
-	m_pfnGet_Memory_range_max = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_Memory_range_max");
-	m_pfnGet_Memory_range_min = (In_0_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_Memory_range_min");
-	m_pfnGet_NVDeviceID = (In_1_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Get_NVDeviceID");
-	m_pfnLock_Frequency = (In_2_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Lock_Frequency");
-	m_pfnLock_Frequency_MEM = (In_2_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Lock_Frequency_MEM");
-	m_pfnSet_CoreOC = (In_2_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Set_CoreOC");
-	m_pfnSet_MEMOC = (In_2_Out_n_Func *)::GetProcAddress(m_hGPUdll, "Set_MEMOC");
-	m_pfnCloseGPU_API = (In_0_Out_0_Func *)::GetProcAddress(m_hGPUdll, "CloseGPU_API");
-
-	//
+	m_pfnGet_GPU_Boost_Clock = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Boost_Clock");
+	m_pfnCheck_GPU_VRAM_Clock = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Check_GPU_VRAM_Clock");
+	m_pfnGet_GPU_Graphics_Clock = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Graphics_Clock");
+	m_pfnGet_GPU_Memory_Clock = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Memory_Clock");
+	m_pfnGet_Memory_OC_max = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_Memory_OC_max");
+	m_pfnGet_GPU_Util = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Util");
+	m_pfnGet_GPU_name = (In_0_Out_s_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_name");
+	m_pfnGet_GPU_TotalNumber = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_TotalNumber");
+	m_pfnGet_GPU_Overclock_range = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_range");
+	m_pfnGet_Memory_range = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_Memory_range");
+	m_pfnGet_GPU_Overclock_rangeMax = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_rangeMax");
+	m_pfnGet_GPU_Overclock_rangeMin = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_GPU_Overclock_rangeMin");
+	m_pfnGet_Memory_range_max = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_Memory_range_max");
+	m_pfnGet_Memory_range_min = (In_0_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_Memory_range_min");
+	m_pfnGet_NVDeviceID = (In_1_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Get_NVDeviceID");
+	m_pfnLock_Frequency = (In_2_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Lock_Frequency");
+	m_pfnLock_Frequency_MEM = (In_2_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Lock_Frequency_MEM");
+	m_pfnSet_CoreOC = (In_2_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Set_CoreOC");
+	m_pfnSet_MEMOC = (In_2_Out_n_Func*)::GetProcAddress(m_hGPUdll, "Set_MEMOC");
+	m_pfnCloseGPU_API = (In_0_Out_0_Func*)::GetProcAddress(m_hGPUdll, "CloseGPU_API");
 	if (m_pfnInitGPU_API())
 	{
 		TRACE0("InitGPU_API初始化失败。\n");
 		FreeLibrary(m_hGPUdll);
 		m_hGPUdll = NULL;
-		return;
+		return FALSE;
 	}
 	m_pfnSet_GPU_Number(0);
 	m_nBaseClock = m_pfnGet_GPU_Base_Clock();
@@ -136,26 +159,27 @@ CGPUInfo::CGPUInfo()
 	m_nGraphicsRangeMin = m_pfnGet_GPU_Overclock_rangeMin();
 	m_nMemoryRangeMax = m_pfnGet_Memory_range_max();
 	m_nMemoryRangeMin = m_pfnGet_Memory_range_min();
-	
+
 	m_nStandardFrequency = m_nBoostClock - m_nGraphicsRangeMin;
 	m_nMaxFrequency = m_nStandardFrequency + m_nGraphicsRangeMax;
 	m_nLockClock = -1;
 	//m_nOverClock = 0;
 	ForcedRefreshGPU = 0;
-	Update();
-
-	TRACE0("成功加载NVGPU_DLL.dll。\n");
+	
+	return TRUE;
 }
-CGPUInfo::~CGPUInfo()
+void CGPUInfo::ReloadAPI()
 {
-	if (m_hGPUdll != NULL)
+	//if (m_nGPU_Temp ^ 0 && m_nGraphicsClock ^ 0 && m_nMemoryClock ^ 0)
+	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
 	{
-		LockFrequency();//还原GPU频率设置
-		m_pfnCloseGPU_API();
-		FreeLibrary(m_hGPUdll);
-		m_hGPUdll = NULL;
+		TRACE0("检测数据为0,重新加载NVGPU_DLL.dll。\n");
+		Init();
 	}
+
+	//return m_Gpu;
 }
+
 BOOL CGPUInfo::Update()
 {
 	if (!m_hGPUdll)
@@ -167,19 +191,6 @@ BOOL CGPUInfo::Update()
 	m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
 	m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
 	m_nGPU_Util = m_pfnGet_GPU_Util();
-	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
-	{
-		m_pfnCloseGPU_API();
-
-		if (m_pfnInitGPU_API())
-		{
-			TRACE0("InitGPU_API初始化失败。\n");
-			FreeLibrary(m_hGPUdll);
-			m_hGPUdll = NULL;
-			return FALSE;
-		}
-	}
-
 	return TRUE;
 }
 BOOL CGPUInfo::LockFrequency(int frequency)
@@ -205,7 +216,7 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 
 	//int MemClock = 0;
 	//if (frequency > 0 && frequency < m_nStandardFrequency)
-	if (frequency > m_nBaseClock && frequency < m_nStandardFrequency)
+	if (frequency >= m_nBaseClock && frequency < m_nStandardFrequency)
 	{
 		//降频
 		GpuClock = frequency;
@@ -620,98 +631,98 @@ void CCore::Work()
 		else
 		{
 			//if (m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit && m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-			if (m_config.LockGPUFrequency ^ 0)
-				//锁定情况下
-			{    
-				if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-					//占用率持续大于97后升频and 频率高于1080
+			if (m_GpuInfo.m_nGPU_Temp > m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //判断当前温度小于极限温度85度 > 75
+			{
+				//else
+				//{
+				//	m_config.LockGPUFrequency = 1;  //温度过高后降频锁定
+				//	limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);
+				//}
+				limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);
+				limitClock = ((limitClock + 5) / 10) * 10;
+				if (limitClock < baseClockLimit)
 				{
-					m_config.TakeOverUp += 1;
-					//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
-
-
-					//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
-					if (m_config.TakeOverUp >= limitTime)
-					{
-
-						if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
-						{
-							limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.08);
-						}
-						else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //判断当前温度大于升频温度75度 小于82维持不变
-						{
-							limitClock = m_GpuInfo.m_nGraphicsClock;
-						}
-						else
-						{
-							limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //锁频后温度高于82降频
-							if (limitClock < baseClockLimit)
-							{
-								limitClock = baseClockLimit;
-							}
-
-						}
-						//if (limitClock < m_GpuInfo.m_nStandardFrequency || limitClock < 1600)
-						limitClock = ((limitClock + 5) / 10) * 10;
-
-						if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
-						{
-							m_config.GPUFrequency = limitClock;
-						}
-						else
-						{
-							if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
-							{
-								m_config.LockGPUFrequency = 0;
-							}
-						}
-						m_config.TakeOverUp = 0;
-						m_config.TakeOverDown = 0;
-						m_config.TakeOverLock = 0;
-					}
+					limitClock = baseClockLimit;
 				}
-				else
-				{
-					if (m_GpuInfo.m_nGPU_Util < 35 && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
-						//锁定情况 Util <35 and 温度小于限温 放开锁定 
-					{
-						m_config.TakeOverLock += 1;
-						if (m_config.TakeOverLock >= limitTime)
-							//计数Times
-						{
-							m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
-							m_config.GPUFrequency = 0;
-							m_config.TakeOverUp = 0;
-							m_config.TakeOverDown = 0;
-							m_config.TakeOverLock = 0;
+				m_config.LockGPUFrequency = 1;  //温度过高后降频锁定
+				m_config.GPUFrequency = limitClock;
 
-						}
-					}
-					
-
-				}
+				m_config.TakeOverUp = 0;
+				m_config.TakeOverDown = 0;
+				m_config.TakeOverLock = 0;
 			}
 			else
 			{
-				if (m_GpuInfo.m_nGPU_Temp > m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //判断当前温度小于极限温度85度 > 75
+				if (m_config.LockGPUFrequency ^ 0)
+					//锁定情况下
 				{
-					//else
-					//{
-					//	m_config.LockGPUFrequency = 1;  //温度过高后降频锁定
-					//	limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);
-					//}
-					limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);
-					limitClock = ((limitClock + 5) / 10) * 10;
-					if (limitClock < baseClockLimit)
+					if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
+						//占用率持续大于97后升频and 频率高于1080
 					{
-						limitClock = baseClockLimit;
-					}
-					m_config.LockGPUFrequency = 1;  //温度过高后降频锁定
-					m_config.GPUFrequency = limitClock;
+						m_config.TakeOverUp += 1;
+						//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
 
-					m_config.TakeOverUp = 0;
-					m_config.TakeOverDown = 0;
-					m_config.TakeOverLock = 0;
+
+						//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
+						if (m_config.TakeOverUp >= limitTime)
+						{
+
+							if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
+							{
+								limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.08);
+							}
+							else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //判断当前温度大于升频温度75度 小于82维持不变
+							{
+								limitClock = m_GpuInfo.m_nGraphicsClock;
+							}
+							else
+							{
+								limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //锁频后温度高于82降频
+								if (limitClock < baseClockLimit)
+								{
+									limitClock = baseClockLimit;
+								}
+
+							}
+							//if (limitClock < m_GpuInfo.m_nStandardFrequency || limitClock < 1600)
+							limitClock = ((limitClock + 5) / 10) * 10;
+
+							if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
+							{
+								m_config.GPUFrequency = limitClock;
+							}
+							else
+							{
+								if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
+								{
+									m_config.LockGPUFrequency = 0;
+								}
+							}
+							m_config.TakeOverUp = 0;
+							m_config.TakeOverDown = 0;
+							m_config.TakeOverLock = 0;
+						}
+					}
+					else
+					{
+						if (m_GpuInfo.m_nGPU_Util < 35 && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
+							//锁定情况 Util <35 and 温度小于限温 放开锁定 
+						{
+							m_config.TakeOverLock += 1;
+							if (m_config.TakeOverLock >= limitTime)
+								//计数Times
+							{
+								m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
+								m_config.GPUFrequency = 0;
+								m_config.TakeOverUp = 0;
+								m_config.TakeOverDown = 0;
+								m_config.TakeOverLock = 0;
+
+							}
+						}
+
+
+					}
 				}
 			}
 		}
@@ -725,6 +736,8 @@ void CCore::Work()
 	else
 		m_GpuInfo.LockFrequency(0);
 }
+
+
 void CCore::Update()
 {
 	ECData data;

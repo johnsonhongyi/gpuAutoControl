@@ -22,7 +22,7 @@ __int64 CompareFileTime(FILETIME time1, FILETIME time2)
 
 	return (b - a);
 }
-int GetCpuClock(int *CPU_usage)
+int GetCpuClock(int* CPU_usage)
 {
 	LARGE_INTEGER c1;
 	QueryPerformanceCounter(&c1);
@@ -64,10 +64,10 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 	enum { IDD = IDD_ABOUTBOX };
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 // 实现
@@ -166,7 +166,7 @@ void CMyFanControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_GPU5, m_ctlGPU5);
 }
 
- BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
+BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
@@ -182,17 +182,17 @@ void CMyFanControlDlg::DoDataExchange(CDataExchange* pDX)
 	ON_BN_CLICKED(IDC_BUTTON_ADVANCED, &CMyFanControlDlg::OnBnClickedButtonAdvanced)
 	ON_BN_CLICKED(IDC_CHECK_AUTORUN, &CMyFanControlDlg::OnBnClickedCheckAutorun)
 	ON_BN_CLICKED(IDC_CHECK_LOCK_GPU_FREQUANCY, &CMyFanControlDlg::OnBnClickedCheckLockGpuFrequancy)
-	 ON_EN_CHANGE(IDC_EDIT_TREANSITION, &CMyFanControlDlg::OnEnChangeEditTreansition)
-	 ON_EN_CHANGE(IDC_EDIT_FORCE_TEMP, &CMyFanControlDlg::OnEnChangeEditForceTemp)
-	 ON_EN_CHANGE(IDC_EDIT_GPU_FREQUENCY, &CMyFanControlDlg::OnEnChangeEditGpuFrequency)
-	 ON_EN_CHANGE(IDC_EDIT_GPU0, &CMyFanControlDlg::OnEnChangeEditGpu0)
-	 ON_EN_CHANGE(IDC_EDIT_GPU1, &CMyFanControlDlg::OnEnChangeEditGpu1)
-	 ON_EN_CHANGE(IDC_EDIT_GPU2, &CMyFanControlDlg::OnEnChangeEditGpu2)
-	 ON_EN_CHANGE(IDC_EDIT_GPU3, &CMyFanControlDlg::OnEnChangeEditGpu3)
-	 ON_EN_CHANGE(IDC_EDIT_GPU4, &CMyFanControlDlg::OnEnChangeEditGpu4)
-	 ON_EN_CHANGE(IDC_EDIT_GPU5, &CMyFanControlDlg::OnEnChangeEditGpu5)
-	 ON_BN_CLICKED(IDOK, &CMyFanControlDlg::OnBnClickedOk)
- END_MESSAGE_MAP()
+	ON_EN_CHANGE(IDC_EDIT_TREANSITION, &CMyFanControlDlg::OnEnChangeEditTreansition)
+	ON_EN_CHANGE(IDC_EDIT_FORCE_TEMP, &CMyFanControlDlg::OnEnChangeEditForceTemp)
+	ON_EN_CHANGE(IDC_EDIT_GPU_FREQUENCY, &CMyFanControlDlg::OnEnChangeEditGpuFrequency)
+	ON_EN_CHANGE(IDC_EDIT_GPU0, &CMyFanControlDlg::OnEnChangeEditGpu0)
+	ON_EN_CHANGE(IDC_EDIT_GPU1, &CMyFanControlDlg::OnEnChangeEditGpu1)
+	ON_EN_CHANGE(IDC_EDIT_GPU2, &CMyFanControlDlg::OnEnChangeEditGpu2)
+	ON_EN_CHANGE(IDC_EDIT_GPU3, &CMyFanControlDlg::OnEnChangeEditGpu3)
+	ON_EN_CHANGE(IDC_EDIT_GPU4, &CMyFanControlDlg::OnEnChangeEditGpu4)
+	ON_EN_CHANGE(IDC_EDIT_GPU5, &CMyFanControlDlg::OnEnChangeEditGpu5)
+	ON_BN_CLICKED(IDOK, &CMyFanControlDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
 
 
 // CMyFanControlDlg 消息处理程序
@@ -301,7 +301,7 @@ HCURSOR CMyFanControlDlg::OnQueryDragIcon()
 DWORD CMyFanControlDlg::CoreThread(LPVOID lParam)
 {
 
-	CMyFanControlDlg * pDlg = (CMyFanControlDlg *)lParam;
+	CMyFanControlDlg* pDlg = (CMyFanControlDlg*)lParam;
 	pDlg->m_core.Run();
 
 	return 0;
@@ -331,7 +331,7 @@ void CMyFanControlDlg::OnOK()
 	if (m_core.m_nExit == 1)//等待内核线程结束
 	{
 		int count = 0;
-		while (m_core.m_nExit == 1 && count++<100)
+		while (m_core.m_nExit == 1 && count++ < 100)
 		{
 			Sleep(100);
 		}
@@ -426,7 +426,7 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 		}
 		//得到控件大小
 		CRect rect;
-		
+
 		m_ctlStatus.GetWindowRect(rect);
 		int width = rect.Width();
 		//设置行列数
@@ -457,7 +457,7 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 		m_ctlStatus.SetItemText(2, i + 1, str);
 		//sprintf_s(str, 256, "%d", m_core.m_nSetDuty[i]);
 		//m_ctlStatus.SetItemText(3, i + 1, str);
-		if (m_core.m_nCurRPM[i]>=0)
+		if (m_core.m_nCurRPM[i] >= 0)
 		{
 			sprintf_s(str, 256, "%d", m_core.m_nCurRPM[i]);
 			m_ctlStatus.SetItemText(3, i + 1, str);
@@ -579,7 +579,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 {
 	//检查设置
 	char str[256];
-	m_ctlInterval.GetWindowTextA(str,256);
+	m_ctlInterval.GetWindowTextA(str, 256);
 	int nInterval = atoi(str);
 	if (nInterval < 1 || nInterval > 300)
 	{
@@ -621,7 +621,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		{
 			GetDlgItem(m_nDutyEditCtlID[i][j])->GetWindowTextA(str, 256);
 			nDutyList[i][j] = atoi(str);
-			if ( j ^ 4 && j ^ 5 )
+			if (j ^ 4 && j ^ 5)
 			{
 				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>100))
 				{
@@ -632,10 +632,10 @@ BOOL CMyFanControlDlg::CheckAndSave()
 				}
 				else
 				{
-					if (j == 3 && nDutyList[i][j-1] < nDutyList[i][j])
+					if (j == 3 && nDutyList[i][j - 1] < nDutyList[i][j])
 					{
 						char str2[256];
-						sprintf_s(str2, 256, "%s温控错误，恒定温度:%d必须小于温控降频:%d", i ? "CPU" : "GPU", nDutyList[i][j], nDutyList[i][j-1]);
+						sprintf_s(str2, 256, "%s温控错误，恒定温度:%d必须小于温控降频:%d", i ? "CPU" : "GPU", nDutyList[i][j], nDutyList[i][j - 1]);
 						AfxMessageBox(str2);
 						return FALSE;
 					}
@@ -676,7 +676,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.GPUOverMEMClock = nTransition;
 	for (int i = 0; i < 2; i++)
 	{
-		for (int j = 0; j < 10; j++)
+		for (int j = 0; j < 6; j++)
 		{
 			m_core.m_config.DutyList[i][j] = nDutyList[i][j];
 		}
@@ -699,6 +699,7 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	m_core.m_config.LoadDefault();
+	m_core.m_GpuInfo.ReloadAPI();
 	UpdateGui(TRUE);
 }
 
@@ -747,7 +748,7 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 	{
 	case WM_LBUTTONUP://左键单击显示主界面
 	{
-						  
+
 	}break;
 	case WM_RBUTTONUP://右击弹出菜单
 	{
@@ -768,9 +769,9 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 			OnCancel();
 
 		}
-		else if (xx == IDR_EXIT) 
+		else if (xx == IDR_EXIT)
 		{
-			OnOK(); 
+			OnOK();
 		}
 		HMENU hmenu = menu.Detach();
 		menu.DestroyMenu();
@@ -788,7 +789,7 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		{
 			char str[128];
 			//sprintf_s(str, 128, "CPU：%d℃，%d%%\nGPU：%d℃，%d%%", m_core.m_nCurTemp[0], m_core.m_nCurDuty[0], m_core.m_nCurTemp[1], m_core.m_nCurDuty[1]);
-			sprintf_s(str, 128, "GPU：%dM  +%d\nGMem：%dM +%d\nGTemp: %d", m_core.m_GpuInfo.m_nGraphicsClock, m_core.m_config.GPUOverClock , m_core.m_GpuInfo.m_nMemoryClock, m_core.m_config.GPUOverMEMClock,m_core.m_GpuInfo.m_nGPU_Temp);
+			sprintf_s(str, 128, "GPU：%dM  +%d\nGMem：%dM +%d\nGTemp: %d", m_core.m_GpuInfo.m_nGraphicsClock, m_core.m_config.GPUOverClock, m_core.m_GpuInfo.m_nMemoryClock, m_core.m_config.GPUOverMEMClock, m_core.m_GpuInfo.m_nGPU_Temp);
 			SetTray(str);
 			LastUpdate = m_core.m_nLastUpdateTime;
 		}
@@ -835,7 +836,7 @@ void CMyFanControlDlg::SetAdvancedMode(BOOL bAdvanced)
 	this->GetWindowRect(rect);
 	if (bAdvanced)
 	{
-		MoveWindow(rect.left, rect.top,  m_nWindowSize[0], m_nWindowSize[1], TRUE);
+		MoveWindow(rect.left, rect.top, m_nWindowSize[0], m_nWindowSize[1], TRUE);
 		GetDlgItem(IDC_BUTTON_ADVANCED)->SetWindowTextA("简单模式");
 	}
 	else
@@ -860,7 +861,7 @@ void CMyFanControlDlg::OnBnClickedCheckAutorun()
 	if (val)
 	{
 		int rv = MessageBox("请选择开机自动启动方式：\r\n\r\n按\"是\"：注册表启动项自启动\r\n按\"否\"：任务计划自启动（管理员权限）\r\n按\"取消\"：放弃操作", "开机自动启动", MB_YESNOCANCEL);
-		
+
 		if (IDYES == rv)
 		{
 			set_rv = SetAutorunReg(TRUE, TRUE);
@@ -910,7 +911,7 @@ BOOL CMyFanControlDlg::SetAutorunReg(BOOL bWrite, BOOL bAutorun)
 
 			nSize = strPath.GetLength();
 			if (RegSetValueEx(hKey, strProduct, 0, REG_SZ,
-				(unsigned char *)strPath.GetBuffer(strPath.GetLength()), nSize) != ERROR_SUCCESS)
+				(unsigned char*)strPath.GetBuffer(strPath.GetLength()), nSize) != ERROR_SUCCESS)
 			{
 				AfxMessageBox("无法写入注册表启动项，需要用管理员权限运行");
 				RegCloseKey(hKey);
@@ -963,7 +964,7 @@ BOOL CMyFanControlDlg::SetAutorunTask(BOOL bWrite, BOOL bAutorun)
 				return FALSE;
 			}
 			strcmd.Format("SCHTASKS /Create /F /XML %s /TN %s", strXmlPath, strTaskName);
-			
+
 		}
 		else
 		{
@@ -985,7 +986,7 @@ BOOL CMyFanControlDlg::SetAutorunTask(BOOL bWrite, BOOL bAutorun)
 		return FALSE;
 	}
 	PCTSTR strFind = bWrite ? (bAutorun ? "成功创建" : "成功删除") : strTaskName;
-	if (rs.Find(strFind)>=0)
+	if (rs.Find(strFind) >= 0)
 		return TRUE;
 	return FALSE;
 }
@@ -1022,7 +1023,7 @@ CString CMyFanControlDlg::ExecuteCmd(CString str)
 	}
 	CloseHandle(hWrite);
 
-	char buffer[4096]="";
+	char buffer[4096] = "";
 	memset(buffer, 0, 4096);
 	CString output;
 	DWORD byteRead;
@@ -1094,11 +1095,11 @@ BOOL CMyFanControlDlg::CreateTaskXml(PCSTR strXmlPath, PCSTR strTargetPath)
 </Task>\r\n";
 	char str[10240];
 	sprintf_s(str, 10240, XmlStr, strTargetPath);
-	FILE *fp;
+	FILE* fp;
 	fp = fopen(strXmlPath, "wt");
 	if (!fp)
 		return FALSE;
-	fwrite(str, strlen(str), 1,fp);
+	fwrite(str, strlen(str), 1, fp);
 
 	fclose(fp);
 	return TRUE;
