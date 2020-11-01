@@ -707,6 +707,7 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 void CMyFanControlDlg::OnBnClickedButtonLoad()
 {
 	// TODO:  在此添加控件通知处理程序代码
+	m_core.m_GpuInfo.ReloadAPI();
 	m_core.m_config.LoadConfig();
 	UpdateGui(TRUE);
 }
