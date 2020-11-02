@@ -57,6 +57,17 @@ int GetCpuClock(int* CPU_usage)
 }
 ////
 
+//整数位数
+int IntSize(CString str)
+{
+	int x,y, z;
+	char b[256];
+	x = atoi(str);
+	y = printf("%d", x);
+	z = sprintf(b, "%d", x);  /*不显示打印*/
+	return (z);
+}
+
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
 class CAboutDlg : public CDialogEx
@@ -545,10 +556,10 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 	//更新间隔
 	sprintf_s(str, 256, "%d", m_core.m_config.UpdateInterval);
 	m_ctlInterval.SetWindowTextA(str);
-	//过渡温度
+	//GPU显存频率(过渡温度) TransitionTemp -->GPU Mem
 	sprintf_s(str, 256, "%d", m_core.m_config.TransitionTemp);
 	m_ctlTransition.SetWindowTextA(str);
-	//强制冷却温度
+	//GPU核心+ ( 强制冷却温度) ForceTemp -->GPU Core
 	sprintf_s(str, 256, "%d", m_core.m_config.ForceTemp);
 	m_ctlForceTemp.SetWindowTextA(str);
 	//GPU频率
@@ -586,15 +597,30 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		AfxMessageBox("更新间隔必须为1-300");
 		return FALSE;
 	}
-	//
-	m_ctlTransition.GetWindowTextA(str, 256);
-	int nTransition = atoi(str);
-	if (nTransition < -500 || nTransition > 800)
+	//GPU Mem 频率
+	CString nchar;
+	m_ctlTransition.GetWindowTextA(nchar);
+	int nTransition = atoi(nchar);
+	if (nTransition < -1000 || nTransition > 1000)
 	{
-		AfxMessageBox("GPU显存频率必须为-500至1000");
+		AfxMessageBox("GPU显存频率必须为-1000至1000");
 		return FALSE;
 	}
-	//
+	else
+	{
+		//if (str ^ str.Format(_T("%f"), nTransition))
+		//{
+		//	sprintf_s(str, 256, "%d", nTransition);
+		//	m_ctlTransition.SetWindowTextA(str);
+		//}
+		if (nchar.GetLength() ^ IntSize(nchar))
+		{
+			AfxMessageBox("只支持正负整数");
+		}
+
+	}
+	
+
 	m_ctlForceTemp.GetWindowTextA(str, 256);
 	int nForceTemp = atoi(str);
 	if (nForceTemp < 0 || nForceTemp > 225)
@@ -669,7 +695,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 	//应用设置
 	m_core.m_config.UpdateInterval = nInterval;
-	m_core.m_config.TransitionTemp = nTransition;
+	m_core.m_config.TransitionTemp = nTransition; //GPU Mem频率
 	m_core.m_config.ForceTemp = nForceTemp;
 	m_core.m_config.GPUFrequency = nFrequency;
 	m_core.m_config.GPUOverClock = nForceTemp;
@@ -1164,8 +1190,19 @@ BOOL CMyFanControlDlg::CheckInputFrequency(int nFrequency)
 }
 
 
+
 void CMyFanControlDlg::OnEnChangeEditTreansition()
 {
+	//GPU显存频率
+	//char nChar[256];
+	//m_ctlTransition.GetWindowTextA(nChar, 256);
+	//int nTransition = atoi(nChar);
+	//if (size(nChar) ^ IntSize(nTransition))
+	//{
+	//	AfxMessageBox("GPU显存频率必须为-500至1000");
+	//}
+
+	//
 	// TODO:  如果该控件是 RICHEDIT 控件，它将不
 	// 发送此通知，除非重写 CDialogEx::OnInitDialog()
 	// 函数并调用 CRichEditCtrl().SetEventMask()，

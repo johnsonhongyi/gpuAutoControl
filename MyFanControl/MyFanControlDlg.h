@@ -99,4 +99,5 @@ public:
 	afx_msg void OnEnChangeEditGpu4();
 	afx_msg void OnEnChangeEditGpu5();
 	afx_msg void OnBnClickedOk();
+	//int IntSize(char* x);
 };
