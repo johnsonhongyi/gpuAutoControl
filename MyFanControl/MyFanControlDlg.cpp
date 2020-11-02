@@ -615,6 +615,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		//}
 		if (nchar.GetLength() ^ IntSize(nchar))
 		{
+			nTransition = m_core.m_config.GPUOverMEMClock;
 			AfxMessageBox("只支持正负整数");
 		}
 
