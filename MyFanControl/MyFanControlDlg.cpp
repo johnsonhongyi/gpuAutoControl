@@ -68,6 +68,14 @@ int IntSize(CString str)
 	return (z);
 }
 
+int IntSize_err(CString str)
+{
+	int num = atoi(str);
+	int n = 1 + (int)log10(num);
+	return (n);
+}
+
+
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
 class CAboutDlg : public CDialogEx

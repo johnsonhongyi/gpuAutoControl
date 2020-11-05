@@ -248,7 +248,7 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	if (!rv3)
 	{
 		CString str;
-		str.Format("Lock_FrequencyÊ§°Ü:%d", GpuClock);
+		str.Format("Lock_FrequencyÊ§°Ü: %d", GpuClock);
 		AfxMessageBox(str);
 		//AfxMessageBox("Lock_FrequencyÊ§°Ü:" + GpuClock);
 	}
@@ -300,7 +300,7 @@ BOOL CGPUInfo::OverClockFrequency(int frequency,int memOverClock)
 	if (!rv1)
 	{
 		CString str;
-		str.Format("Set_CoreOCÊ§°Ü:%d", GpuOverclock);
+		str.Format("Set_CoreOCÊ§°Ü: %d", GpuOverclock);
 		AfxMessageBox(str);
 		//AfxMessageBox("Set_CoreOCÊ§°Ü:"+ GpuOverclock);
 	}
@@ -311,7 +311,7 @@ BOOL CGPUInfo::OverClockFrequency(int frequency,int memOverClock)
 	if (!rv2)
 	{
 		CString str;
-		str.Format("Set_MEMOCÊ§°Ü:%d", MemOverclock);
+		str.Format("Set_MEMOCÊ§°Ü: %d", MemOverclock);
 		AfxMessageBox(str);
 		//AfxMessageBox("Set_MEMOCÊ§°Ü:"+ MemOverclock);
 	}
@@ -731,10 +731,14 @@ void CCore::Work()
 	if (m_config.GPUOverClock > 0 || m_config.GPUOverClock < 200)
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
 		m_GpuInfo.OverClockFrequency(m_config.GPUOverClock,m_config.GPUOverMEMClock);
-	if (m_config.LockGPUFrequency)
-			m_GpuInfo.LockFrequency(m_config.GPUFrequency);
-	else
-		m_GpuInfo.LockFrequency(0);
+
+	if (m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
+	{
+		if (m_config.LockGPUFrequency)
+				m_GpuInfo.LockFrequency(m_config.GPUFrequency);
+		else
+			m_GpuInfo.LockFrequency(0);
+	}
 }
 
 
