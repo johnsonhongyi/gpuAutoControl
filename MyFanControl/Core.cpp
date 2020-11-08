@@ -245,13 +245,15 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	//	AfxMessageBox("Set_MEMOC ß∞‹");
 	////
 	int rv3 = (m_pfnLock_Frequency(0, GpuClock) == 0x19);
-	if (!rv3)
-	{
-		CString str;
-		str.Format("Lock_Frequency ß∞‹: %d", GpuClock);
-		AfxMessageBox(str);
-		//AfxMessageBox("Lock_Frequency ß∞‹:" + GpuClock);
-	}
+
+	//if (!rv3)
+	//{
+	//	CString str;
+	//	str.Format("Lock_Frequency ß∞‹: %d", GpuClock);
+	//	AfxMessageBox(str);
+	//	//AfxMessageBox("Lock_Frequency ß∞‹:" + GpuClock);
+	//}
+
 	////
 	//int rv4 = 1;
 	////int rv4 = (m_pfnLock_Frequency_MEM(0, MemClock) == 0x19);
