@@ -606,12 +606,12 @@ void CCore::Work()
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
 	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
-	int baseClockLimit = 800;
+	int baseClockLimit = 790;  //Lock 800 m_nGraphicsClock ==795
 	//m_core.m_config.Linear 线性控制
 	if (m_config.TakeOver)
 	{
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit * 1.02)
+		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
 		{
 			//占用率<88
 			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
