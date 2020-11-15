@@ -606,12 +606,12 @@ void CCore::Work()
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
 	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
-	int baseClockLimit = 790;  //Lock 800 m_nGraphicsClock ==795
+	int baseClockLimit = 800;  //Lock 800 m_nGraphicsClock ==795
 	//m_core.m_config.Linear 线性控制
 	if (m_config.TakeOver)
 	{
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
+		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit - 10)
 		{
 			//占用率<88
 			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
@@ -622,7 +622,7 @@ void CCore::Work()
 				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //降频为占用率上限
 				limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);  //降频0.95
 
-				if (limitClock > baseClockLimit)
+				if (limitClock >= baseClockLimit)
 				{
 					m_config.LockGPUFrequency = 1;
 					m_config.GPUFrequency = limitClock;
@@ -635,7 +635,7 @@ void CCore::Work()
 		else
 		{
 			//if (m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit && m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-			if (m_GpuInfo.m_nGPU_Temp > m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //判断当前温度小于极限温度85度 > 75
+			if (m_GpuInfo.m_nGPU_Temp > m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)   //判断当前温度小于极限温度85度 > 75
 			{
 				//else
 				//{
