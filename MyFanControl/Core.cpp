@@ -201,7 +201,8 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 		frequency = m_nStandardFrequency;
 
 	//if (frequency < 0 || frequency > m_nMaxFrequency)
-	if (frequency < m_nBaseClock || frequency > m_nMaxFrequency)
+	//if (frequency < m_nBaseClock || frequency > m_nMaxFrequency)
+	if (frequency < 800 || frequency > m_nMaxFrequency)
 		return FALSE;
 
 	if (m_nLockClock == frequency)
@@ -215,8 +216,8 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	int GpuClock = 0;
 
 	//int MemClock = 0;
-	//if (frequency > 0 && frequency < m_nStandardFrequency)
-	if (frequency >= m_nBaseClock && frequency < m_nStandardFrequency)
+	if (frequency >= 800 && frequency < m_nStandardFrequency)
+	//if (frequency >= m_nBaseClock && frequency < m_nStandardFrequency)
 	{
 		//降频
 		GpuClock = frequency;
@@ -604,7 +605,8 @@ void CCore::Work()
 	//锁定GPU频率
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
-	int baseClockLimit = m_GpuInfo.m_nBaseClock;
+	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
+	int baseClockLimit = 800;
 	//m_core.m_config.Linear 线性控制
 	if (m_config.TakeOver)
 	{
