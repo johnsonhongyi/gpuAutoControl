@@ -149,8 +149,7 @@ BOOL CGPUInfo::Init()
 	//m_nGet_GPU_ALLInfo = m_pfnGet_GPU_ALLInfo();
 	m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
 	m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
-	//
-
+	
 
 	m_nBoostClock = m_pfnGet_GPU_Boost_Clock();
 	m_sName = m_pfnGet_GPU_name();
@@ -379,6 +378,8 @@ void CConfig::LoadDefault()
 	TakeOverDown = 0;
 	TakeOverUp = 0;
 	TakeOverLock = 0;
+	GPU_LockClock = 0; //init Lock Clock
+
 }
 void CConfig::LoadConfig()
 {
@@ -457,6 +458,7 @@ CCore::CCore()
 	m_bForcedCooling = FALSE;
 	m_bTakeOverStatus = FALSE;
 	m_bForcedRefresh = FALSE;
+	//m_nGPU_LockClock = 0;
 }
 CCore::~CCore()
 {
@@ -547,7 +549,13 @@ void CCore::Run()
 	//m_nInit = 2;
 	//Sleep(3000);
 	if (!m_nInit)
+	{
 		Init();
+		//if (m_config.LockGPUFrequency)
+		//{
+		//	//m_nGPU_LockClock = m_config.GPUOverClock;
+		//}
+	}
 
 	if (m_nInit == 1)
 	{
@@ -699,7 +707,8 @@ void CCore::Work()
 							{
 								if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
 								{
-									m_config.LockGPUFrequency = 0;
+									//m_config.LockGPUFrequency = 0;
+									m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock
 								}
 							}
 							m_config.TakeOverUp = 0;
@@ -716,8 +725,9 @@ void CCore::Work()
 							if (m_config.TakeOverLock >= limitTime)
 								//计数Times
 							{
-								m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
-								m_config.GPUFrequency = 0;
+								//m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
+								//m_config.GPUFrequency = 0;
+								m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock
 								m_config.TakeOverUp = 0;
 								m_config.TakeOverDown = 0;
 								m_config.TakeOverLock = 0;
@@ -740,7 +750,12 @@ void CCore::Work()
 	if (m_GpuInfo.m_nGraphicsClock >= 795)
 	{
 		if (m_config.LockGPUFrequency)
+		{
+			if (m_config.TakeOver)
 				m_GpuInfo.LockFrequency(m_config.GPUFrequency);
+			else
+				m_GpuInfo.LockFrequency(m_config.GPU_LockClock);
+		}
 		else
 			m_GpuInfo.LockFrequency(0);
 	}

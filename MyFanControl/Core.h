@@ -142,6 +142,7 @@ public:
 	int upTemplimit;//温控升频阈值
 	int upClocklimit;//温控频率阈值
 	int timelimit;//温控周期阈值
+	int GPU_LockClock; //初始化锁定频率
 
 
 public:
@@ -183,6 +184,7 @@ public:
 	BOOL m_bForcedCooling;//强制冷却
 	BOOL m_bTakeOverStatus;//接管控制状态，描述最后一次调用的是m_pfnSetFanDuty（TRUE）还是m_pfnSetFANDutyAuto（FALSE）
 	BOOL m_bForcedRefresh;//立即刷新
+	//int m_nGPU_LockClock; //初始化锁定频率
 
 public:
 	BOOL Init();

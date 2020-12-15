@@ -60,7 +60,7 @@ int GetCpuClock(int* CPU_usage)
 //整数位数
 int IntSize(CString str)
 {
-	int x,y, z;
+	int x, y, z;
 	char b[256];
 	x = atoi(str);
 	y = printf("%d", x);
@@ -628,7 +628,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		}
 
 	}
-	
+
 
 	m_ctlForceTemp.GetWindowTextA(str, 256);
 	int nForceTemp = atoi(str);
@@ -709,6 +709,10 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.GPUFrequency = nFrequency;
 	m_core.m_config.GPUOverClock = nForceTemp;
 	m_core.m_config.GPUOverMEMClock = nTransition;
+	if (!m_core.m_config.TakeOver)
+	{
+		m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+	}
 	for (int i = 0; i < 2; i++)
 	{
 		for (int j = 0; j < 6; j++)
@@ -842,10 +846,12 @@ void CMyFanControlDlg::OnBnClickedCheckTakeover()
 	m_core.m_config.TakeOver = val;
 	if (!val)
 	{
-		m_core.m_config.LockGPUFrequency = 0;
-		m_ctlLockGpuFrequancy.SetCheck(FALSE);
+		//m_core.m_config.LockGPUFrequency = 0; // TakeOver False to UnLock
+		//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
+		//m_ctlLockGpuFrequancy.SetCheck(FALSE);
 		char str[256];
-		sprintf_s(str, 256, "%d", m_core.m_GpuInfo.m_nLockClock);
+		//sprintf_s(str, 256, "%d", m_core.m_GpuInfo.m_nLockClock);
+		sprintf_s(str, 256, "%d", m_core.m_config.GPU_LockClock);
 		m_ctlFrequency.SetWindowTextA(str);
 	}
 }
