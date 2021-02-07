@@ -201,7 +201,7 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 
 	//if (frequency < 0 || frequency > m_nMaxFrequency)
 	//if (frequency < m_nBaseClock || frequency > m_nMaxFrequency)
-	if (frequency < 800 || frequency > m_nMaxFrequency)
+	if (frequency < 400 || frequency > m_nMaxFrequency)
 		return FALSE;
 
 	if (m_nLockClock == frequency)
@@ -215,7 +215,7 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	int GpuClock = 0;
 
 	//int MemClock = 0;
-	if (frequency >= 800 && frequency < m_nStandardFrequency)
+	if (frequency >= 400 && frequency < m_nStandardFrequency)
 	//if (frequency >= m_nBaseClock && frequency < m_nStandardFrequency)
 	{
 		//½µÆµ
@@ -614,7 +614,7 @@ void CCore::Work()
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
 	int baseClockLimit = m_GpuInfo.m_nBaseClock;
-	//int baseClockLimit = 795;  //Lock 800 m_nGraphicsClock ==795
+	int lowClockLimit = 400;  //Lock 800 m_nGraphicsClock ==795
 	//m_core.m_config.Linear ÏßÐÔ¿ØÖÆ
 	if (m_config.TakeOver)
 	{
@@ -747,7 +747,7 @@ void CCore::Work()
 		m_GpuInfo.OverClockFrequency(m_config.GPUOverClock,m_config.GPUOverMEMClock);
 
 	//if (m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-	if (m_GpuInfo.m_nGraphicsClock >= 795)
+	if (m_GpuInfo.m_nGraphicsClock >= lowClockLimit - 5)
 	{
 		if (m_config.LockGPUFrequency)
 		{
