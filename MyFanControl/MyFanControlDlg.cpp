@@ -126,6 +126,8 @@ CMyFanControlDlg::CMyFanControlDlg(CWnd* pParent /*=NULL*/)
 	m_nWindowSize[0] = 0;
 	m_nWindowSize[1] = 0;
 
+	//	int LockGPUFrequency_TakeOver_Staus   //标记TakeOver时Lock状态  0 未锁定,1 锁定 ,2 未初始化
+	m_TakeOver_LockGPUFrequency_Staus = 2;
 
 	//new
 	m_nDutyEditCtlID[0][0] = IDC_EDIT_GPU0;
@@ -709,9 +711,23 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.GPUFrequency = nFrequency;
 	m_core.m_config.GPUOverClock = nForceTemp;
 	m_core.m_config.GPUOverMEMClock = nTransition;
+
 	if (!m_core.m_config.TakeOver)
 	{
 		m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+
+	}
+	else
+	{
+		//动态调整开启后
+		//if (m_TakeOver_LockGPUFrequency_Staus == 2)
+		m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+		if (!m_core.m_config.LockGPUFrequency)
+			//重置GPUFrequency
+		{
+			m_core.m_config.GPUFrequency = 0;
+		}
+
 	}
 	for (int i = 0; i < 2; i++)
 	{
@@ -845,15 +861,38 @@ void CMyFanControlDlg::OnBnClickedCheckTakeover()
 	int val = m_ctlTakeOver.GetCheck();
 	m_core.m_config.TakeOver = val;
 	if (!val)
-	{
+	{	
+		//未动态锁定
 		//m_core.m_config.LockGPUFrequency = 0; // TakeOver False to UnLock
 		//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
 		//m_ctlLockGpuFrequancy.SetCheck(FALSE);
+		//m_TakeOver_LockGPUFrequency_Staus = 2;
 		char str[256];
 		//sprintf_s(str, 256, "%d", m_core.m_GpuInfo.m_nLockClock);
 		sprintf_s(str, 256, "%d", m_core.m_config.GPU_LockClock);
 		m_ctlFrequency.SetWindowTextA(str);
 	}
+	//else
+	//{
+	//	if (m_TakeOver_LockGPUFrequency_Staus == 2 )
+	//	{
+	//		if (m_core.m_config.LockGPUFrequency)
+	//			//锁定标记
+	//		{
+	//			m_TakeOver_LockGPUFrequency_Staus = m_core.m_config.LockGPUFrequency;  // ==1
+	//			//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
+	//		}
+	//		//else
+	//		//{
+	//		//	m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+	//		//}
+	//			
+	//	}
+	//	else
+	//	{
+	//		m_core.m_config.GPU_LockClock = 0;
+	//	}
+	//}
 }
 
 

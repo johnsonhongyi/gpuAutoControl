@@ -61,6 +61,7 @@ public:
 	BOOL m_bWindowVisible;//窗口是否显示
 	int m_nWindowSize[2];//完整窗口尺寸
 	BOOL m_bAdvancedMode;//高级模式
+	int m_TakeOver_LockGPUFrequency_Staus;  //标记TakeOver时Lock状态
 
 public:
 	static DWORD WINAPI CoreThread(LPVOID lParam);
