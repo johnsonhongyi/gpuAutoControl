@@ -613,8 +613,9 @@ void CCore::Work()
 	//锁定GPU频率
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
-	int baseClockLimit = m_GpuInfo.m_nBaseClock;
-	int lowClockLimit = 400;  //Lock 800 m_nGraphicsClock ==795
+	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
+	int baseClockLimit = 600;
+	int lowClockLimit = 420;  //Lock 800 m_nGraphicsClock ==795
 	//m_core.m_config.Linear 线性控制
 	if (m_config.TakeOver)
 	{
@@ -668,8 +669,10 @@ void CCore::Work()
 				if (m_config.LockGPUFrequency ^ 0)
 					//锁定情况下
 				{
-					if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-						//占用率持续大于97后升频and 频率高于1080
+					//if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
+					//	//占用率持续大于97后升频and 频率高于1080
+					if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= lowClockLimit)
+						//占用率持续大于97后升频and  频率高于 lowClockLimit 600
 					{
 						m_config.TakeOverUp += 1;
 						//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//使用周期*时间统计
@@ -699,7 +702,9 @@ void CCore::Work()
 							//if (limitClock < m_GpuInfo.m_nStandardFrequency || limitClock < 1600)
 							limitClock = ((limitClock + 5) / 10) * 10;
 
-							if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
+							//if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
+							if (limitClock >= lowClockLimit && limitClock < m_config.upClocklimit)
+
 							{
 								m_config.GPUFrequency = limitClock;
 							}
@@ -747,7 +752,7 @@ void CCore::Work()
 		m_GpuInfo.OverClockFrequency(m_config.GPUOverClock,m_config.GPUOverMEMClock);
 
 	//if (m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-	if (m_GpuInfo.m_nGraphicsClock >= lowClockLimit - 5)
+	if (m_GpuInfo.m_nGraphicsClock >= lowClockLimit - 5 || m_config.GPU_LockClock > m_GpuInfo.m_nGraphicsClock )
 	{
 		if (m_config.LockGPUFrequency)
 		{

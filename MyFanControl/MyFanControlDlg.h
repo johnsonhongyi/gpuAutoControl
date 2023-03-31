@@ -76,6 +76,7 @@ public:
 	afx_msg void OnBnClickedButtonLoad();
 	void SetTray(PCSTR string);//设置托盘，鼠标放置显示的内容，如果传入NULL，则删除图标
 	afx_msg LRESULT OnShowTask(WPARAM wParam, LPARAM lParam);//系统托盘事件函数
+	afx_msg LRESULT OnTaskBarRestart(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnBnClickedCheckTakeover();
 	//afx_msg void OnBnClickedCheckForce();
 	//afx_msg void OnBnClickedCheckLinear();
@@ -101,4 +102,15 @@ public:
 	afx_msg void OnEnChangeEditGpu5();
 	afx_msg void OnBnClickedOk();
 	//int IntSize(char* x);
+	//static UINT NEAR WM_FIND = RegisterWindowMessage("COMMDLG_FIND");
+	
+
+	//static  UINT WM_TASKBARCREATED = ::RegisterWindowMessage(_T("TaskbarCreated"));
+	////ON_REGISTERED_MESSAGE(WM_TaskbarRestart, OnTaskBarRestart)
+	//BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
+	//	//{{AFX_MSG_MAP(CMyWnd)
+	//	//ON_REGISTERED_MESSAGE(WM_FIND, OnFind)
+	//	ON_REGISTERED_MESSAGE(WM_TaskbarRestart, OnTaskBarRestart)
+	//	//}}AFX_MSG_MAP
+	//END_MESSAGE_MAP()
 };

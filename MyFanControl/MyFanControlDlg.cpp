@@ -187,7 +187,10 @@ void CMyFanControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_GPU5, m_ctlGPU5);
 }
 
+const   UINT WM_TaskbarRestart = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
+
 BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
+	ON_REGISTERED_MESSAGE(WM_TaskbarRestart, OnTaskBarRestart)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
@@ -221,7 +224,7 @@ END_MESSAGE_MAP()
 BOOL CMyFanControlDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
+	
 	// 将“关于...”菜单项添加到系统菜单中。
 
 	// IDM_ABOUTBOX 必须在系统命令范围内。
@@ -282,6 +285,24 @@ void CMyFanControlDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
+
+
+
+LRESULT CMyFanControlDlg::OnTaskBarRestart(WPARAM wParam, LPARAM lParam) //重建tray
+{
+	static BOOL added = FALSE;
+	NOTIFYICONDATA nid;
+	nid.cbSize = (DWORD)sizeof(NOTIFYICONDATA);
+	nid.hWnd = this->m_hWnd;
+	nid.uID = IDR_MAINFRAME;
+	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+	nid.uCallbackMessage = WM_SHOWTASK;//自定义的消息名称  
+	nid.hIcon = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_MAINFRAME));
+	Shell_NotifyIcon(NIM_ADD, &nid);
+	added = TRUE;
+	return 0;
+}	
+
 
 // 如果向对话框添加最小化按钮，则需要下面的代码
 //  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
@@ -611,7 +632,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	CString nchar;
 	m_ctlTransition.GetWindowTextA(nchar);
 	int nTransition = atoi(nchar);
-	if (nTransition < -1000 || nTransition > 1000)
+	if (nTransition < -1000 || nTransition > 2000)
 	{
 		AfxMessageBox("GPU显存频率必须为-1000至1000");
 		return FALSE;
@@ -714,14 +735,33 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 	if (!m_core.m_config.TakeOver)
 	{
-		m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+		if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2);   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+			m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
 
 	}
 	else
 	{
 		//动态调整开启后
-		//if (m_TakeOver_LockGPUFrequency_Staus == 2)
-		m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+		if (m_TakeOver_LockGPUFrequency_Staus == 2)
+		{
+			m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+			//m_TakeOver_LockGPUFrequency_Staus = 1;   //Status  0 未锁定,1 锁定 ,2 未初始化
+			if (m_core.m_config.LockGPUFrequency)
+				//锁定标记
+			{
+				//m_TakeOver_LockGPUFrequency_Staus = m_core.m_config.LockGPUFrequency;  // ==1
+				m_TakeOver_LockGPUFrequency_Staus = 1;   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+
+				//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
+			}
+			else
+			{
+				//m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+				m_TakeOver_LockGPUFrequency_Staus = 0;   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+
+			}
+		}
+
 		if (!m_core.m_config.LockGPUFrequency)
 			//重置GPUFrequency
 		{
@@ -766,6 +806,10 @@ void CMyFanControlDlg::OnBnClickedButtonLoad()
 	m_core.m_config.LoadConfig();
 	UpdateGui(TRUE);
 }
+
+//UINT g_uTaskbarCreated = RegisterWindowMessage(TEXT("TaskbarCreated"));
+
+
 
 void CMyFanControlDlg::SetTray(PCSTR string)//设置托盘图标
 {
@@ -855,6 +899,31 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+
+
+
+//LRESULT CALLBACK WndProc(HWND hWnd, UINT uMessage, WPARAM wParam,
+//	LPARAM lParam)
+//{
+//	static UINT s_uTaskbarRestart;
+//
+//	switch (uMessage)
+//	{
+//	case WM_CREATE:
+//		s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
+//		break;
+//
+//	default:
+//		if (uMessage == s_uTaskbarRestart)
+//		{
+//			this.SetTray();//这个就是往托盘区画图标的函数，需要自己写。
+//
+//		}
+//		break;
+//	}
+//	return DefWindowProc(hWnd, uMessage, wParam, lParam);
+//}
+
 void CMyFanControlDlg::OnBnClickedCheckTakeover()
 {
 	// TODO:  在此添加控件通知处理程序代码
@@ -872,27 +941,31 @@ void CMyFanControlDlg::OnBnClickedCheckTakeover()
 		sprintf_s(str, 256, "%d", m_core.m_config.GPU_LockClock);
 		m_ctlFrequency.SetWindowTextA(str);
 	}
-	//else
-	//{
-	//	if (m_TakeOver_LockGPUFrequency_Staus == 2 )
-	//	{
-	//		if (m_core.m_config.LockGPUFrequency)
-	//			//锁定标记
-	//		{
-	//			m_TakeOver_LockGPUFrequency_Staus = m_core.m_config.LockGPUFrequency;  // ==1
-	//			//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
-	//		}
-	//		//else
-	//		//{
-	//		//	m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
-	//		//}
+	else
+	{
+		if (m_TakeOver_LockGPUFrequency_Staus == 2 )
+		{
+			if (m_core.m_config.LockGPUFrequency)
+				//锁定标记
+			{
+				//m_TakeOver_LockGPUFrequency_Staus = m_core.m_config.LockGPUFrequency;  // ==1
+				m_TakeOver_LockGPUFrequency_Staus = 1;   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+
+				//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
+			}
+			else
+			{
+				//m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+				m_TakeOver_LockGPUFrequency_Staus = 0;   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+
+			}
 	//			
-	//	}
+		}
 	//	else
 	//	{
 	//		m_core.m_config.GPU_LockClock = 0;
 	//	}
-	//}
+	}
 }
 
 
