@@ -644,7 +644,7 @@ void CCore::Work()
 		else
 		{
 			//if (m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit && m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-			if (m_GpuInfo.m_nGPU_Temp > m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //判断当前温度小于极限温度85度 > 75
+			if (m_GpuInfo.m_nGPU_Temp >= m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //判断当前温度小于极限温度85度 > 75
 			{
 				//else
 				//{
@@ -681,8 +681,13 @@ void CCore::Work()
 						//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
 						if (m_config.TakeOverUp >= limitTime)
 						{
+							if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit - 10)  //判断当前温度小于升频温度75度 
+							{
+								//limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.18);
+								limitClock = m_config.GPU_LockClock;				//default LockClock
+							}
 
-							if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
+							else if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
 							{
 								limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.08);
 							}
@@ -713,7 +718,9 @@ void CCore::Work()
 								if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,温度小于75放开锁定
 								{
 									//m_config.LockGPUFrequency = 0;
-									m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock
+									//bug when limitClock == upClocklimit will to LockClock
+									//m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock BUG
+									m_config.GPUFrequency = m_config.upClocklimit;   //set GPU to upClocklimit
 								}
 							}
 							m_config.TakeOverUp = 0;
