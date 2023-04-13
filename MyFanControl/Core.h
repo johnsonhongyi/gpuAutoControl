@@ -72,7 +72,7 @@ public:
 	void ReloadAPI();//初始化API
 	BOOL Init();//初始化API
 	BOOL LockFrequency(int frequency = 0);//锁定最大频率，可以用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
-	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0);//用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
+	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780);//用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
 
 protected:
 	HMODULE m_hGPUdll;
@@ -169,6 +169,7 @@ protected:
 
 public:
 	BOOL m_nInit;//是否初始化，0未初始化，1初始化成功，2初始化失败
+	BOOL m_start_overclock;
 	int m_nExit;//退出信号，0，不退出，1，需要退出，2，内核已退出
 	HINSTANCE m_hInstDLL;//模块dll
 	CConfig m_config;//配置文件
