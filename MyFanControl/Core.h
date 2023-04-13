@@ -143,6 +143,7 @@ public:
 	int upClocklimit;//温控频率阈值
 	int timelimit;//温控周期阈值
 	int GPU_LockClock; //初始化锁定频率
+	int CurveUV_limit; //初始化mv
 
 
 public:

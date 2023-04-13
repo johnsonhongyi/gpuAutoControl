@@ -92,6 +92,8 @@ protected:
 // 实现
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnEnChangeEditGpu10();
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
@@ -104,6 +106,7 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+	ON_EN_CHANGE(IDC_EDIT_GPU10, &CMyFanControlDlg::OnEnChangeEditGpu10)
 END_MESSAGE_MAP()
 
 
@@ -136,6 +139,7 @@ CMyFanControlDlg::CMyFanControlDlg(CWnd* pParent /*=NULL*/)
 	m_nDutyEditCtlID[0][3] = IDC_EDIT_GPU3;
 	m_nDutyEditCtlID[0][4] = IDC_EDIT_GPU4;
 	m_nDutyEditCtlID[0][5] = IDC_EDIT_GPU5;
+	m_nDutyEditCtlID[0][6] = IDC_EDIT_GPU10;
 
 
 	//m_nDutyEditCtlID[0][0] = IDC_EDIT_CPU0;
@@ -185,6 +189,7 @@ void CMyFanControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_GPU3, m_ctlGPU3);
 	DDX_Control(pDX, IDC_EDIT_GPU4, m_ctlGPU4);
 	DDX_Control(pDX, IDC_EDIT_GPU5, m_ctlGPU5);
+	DDX_Control(pDX, IDC_EDIT_GPU10,m_ctlGPU10);
 }
 
 const   UINT WM_TaskbarRestart = ::RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -215,6 +220,7 @@ BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_GPU3, &CMyFanControlDlg::OnEnChangeEditGpu3)
 	ON_EN_CHANGE(IDC_EDIT_GPU4, &CMyFanControlDlg::OnEnChangeEditGpu4)
 	ON_EN_CHANGE(IDC_EDIT_GPU5, &CMyFanControlDlg::OnEnChangeEditGpu5)
+	ON_EN_CHANGE(IDC_EDIT_GPU10, &CMyFanControlDlg::OnEnChangeEditGpu10)
 	ON_BN_CLICKED(IDOK, &CMyFanControlDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
@@ -486,6 +492,7 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 		m_ctlStatus.InsertItem(i++, "转速RPM");
 		m_ctlStatus.InsertItem(i++, "运行频率");
 		m_ctlStatus.InsertItem(i++, "使用率%");
+		//m_ctlStatus.InsertItem(i++, "CurveUV_limitmv");
 	}
 	//显示状态信息
 	char str[256];
@@ -518,6 +525,10 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 			m_ctlStatus.SetItemText(4, i + 1, str);
 			sprintf_s(str, 256, "%d", m_core.m_GpuInfo.m_nGPU_Util);
 			m_ctlStatus.SetItemText(5, i + 1, str);
+			//CurveUV_limit Add 
+			//sprintf_s(str, 256, "%d", m_core.m_config.CurveUV_limit);
+			//m_ctlStatus.SetItemText(6, i + 1, str);
+
 		}
 		/*
 		else if (i == 0)
@@ -596,7 +607,9 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 	//GPU频率
 	sprintf_s(str, 256, "%d", m_core.m_config.GPUFrequency);
 	m_ctlFrequency.SetWindowTextA(str);
-
+	//CurveUV_limit Show Gui
+	sprintf_s(str, 256, "%d", m_core.m_config.CurveUV_limit);
+	m_ctlGPU10.SetWindowTextA(str);
 	//GPU限频
 	int lf = m_ctlLockGpuFrequancy.GetCheck();
 	if (lf ^ m_core.m_config.LockGPUFrequency)
@@ -672,16 +685,16 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	//	nFrequency = m_core.m_GpuInfo.m_nStandardFrequency;
 	//
 	//int nDutyList[2][10];
-	int nDutyList[1][6];
+	int nDutyList[1][7]; //7 lab CurveUV_limit
 	for (int i = 0; i < 1; i++)
 	{
-		for (int j = 0; j < 6; j++)
+		for (int j = 0; j < 7; j++)
 		{
 			GetDlgItem(m_nDutyEditCtlID[i][j])->GetWindowTextA(str, 256);
 			nDutyList[i][j] = atoi(str);
 			if (j ^ 4 && j ^ 5)
 			{
-				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>100))
+				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>100) && j != 6) //CurveUV_limit spec
 				{
 					char str2[256];
 					sprintf_s(str2, 256, "%s设定错误，必须为0-100", i ? "CPU" : "GPU");
@@ -724,6 +737,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.upTemplimit = nDutyList[0][3];//温控升频阈值
 	m_core.m_config.upClocklimit = nDutyList[0][4];//温控升频阈值
 	m_core.m_config.timelimit = nDutyList[0][5];//温控时长
+	m_core.m_config.CurveUV_limit = nDutyList[0][6];//CurveUV_limit mv
 
 	//应用设置
 	m_core.m_config.UpdateInterval = nInterval;
@@ -1428,9 +1442,21 @@ void CMyFanControlDlg::OnEnChangeEditGpu5()
 	// TODO:  在此添加控件通知处理程序代码
 }
 
+void CMyFanControlDlg::OnEnChangeEditGpu10()
+{
+	// TODO:  如果该控件是 RICHEDIT 控件，它将不
+	// 发送此通知，除非重写 CDialogEx::OnInitDialog()
+	// 函数并调用 CRichEditCtrl().SetEventMask()，
+	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
+
+	// TODO:  在此添加控件通知处理程序代码
+}
 
 void CMyFanControlDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	CDialogEx::OnOK();
 }
+
+
+

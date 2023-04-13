@@ -657,7 +657,7 @@ BOOL CGPUInfo::Init()
 			if (curve)
 			{
 				//fprintf(curve, "cd \"%s\"\n", buffer);
-				//fprintf(curve, "\"%s\" -curve %d %d", argv[0], gpuBusId, count);
+				fprintf(curve, "\"nvapioc.exe\" -curve %d %d", gpuBusId, count);
 
 				for (int i = 0; i < count; ++i)
 					fprintf(curve, " %d %d", voltageUV[i], frequencyDeltaKHz[i]);
@@ -999,6 +999,7 @@ void CConfig::LoadDefault()
 	upTemplimit = 79;//温控升频阈值
 	upClocklimit = 1600; //升频上限
 	timelimit = 3;    //统计时长
+	CurveUV_limit = 780; //Curve保护
 
 	int i = 0;
 	DutyList[0][i++] = upClockPercent;//90+  //占用率升频阈值
@@ -1007,6 +1008,7 @@ void CConfig::LoadDefault()
 	DutyList[0][i++] = upTemplimit;//75+	//温控升频阈值
 	DutyList[0][i++] = upClocklimit;//70+
 	DutyList[0][i++] = timelimit;//65+
+	DutyList[0][i++] = CurveUV_limit;//780mv
 	//DutyList[0][i++] = 0;//60+
 	//DutyList[0][i++] = 0;//55+
 	//DutyList[0][i++] = 0;//50+
@@ -1410,7 +1412,11 @@ void CCore::Work()
 	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < 200) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
 	{
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
-		m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock);
+		if (m_config.CurveUV_limit > 0)
+			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit);
+		else
+			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock);
+
 		m_start_overclock = 1;
 	}
 
