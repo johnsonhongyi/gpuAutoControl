@@ -1447,13 +1447,14 @@ void CCore::Work()
 					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
 					if (freq_over_clock != m_config.GPUOverClock)
 					{
+						m_GpuInfo.ForcedRefreshGPU = 1;
+						LOG(frequencyDeltaKHz_t[0] / 500);
 						if (m_config.CurveUV_limit > 0)
 							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
 						else
 							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 
 						if (m_start_overclock == 0)
-							LOG(frequencyDeltaKHz_t[0] / 500);
 							m_start_overclock = 1;
 					}
 				}
