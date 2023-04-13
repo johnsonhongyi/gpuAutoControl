@@ -320,7 +320,7 @@ int NvApiLoad()
 
 	if (result == 0)
 	{
-		LOG(NvAPI_QueryInterface = (void* (__cdecl*)(unsigned int)) GetProcAddress(nvapi, "nvapi_QueryInterface"));
+		(NvAPI_QueryInterface = (void* (__cdecl*)(unsigned int)) GetProcAddress(nvapi, "nvapi_QueryInterface"));
 
 		result = !(NvAPI_QueryInterface != 0);
 
@@ -436,7 +436,7 @@ int NvApiEnumTccGpus()
 		void* handles[64] = { 0 };
 		unsigned int count = 0;
 
-		LOG(result = NvAPI_EnumTCCPhysicalGPUs(handles, &count));
+		(result = NvAPI_EnumTCCPhysicalGPUs(handles, &count));
 
 		if (result == 0)
 		{
@@ -445,7 +445,7 @@ int NvApiEnumTccGpus()
 				unsigned int busId = 0;
 				int busIdResult = 0;
 
-				LOG(busIdResult = NvAPI_GPU_GetBusId(handles[i], &busId));
+				(busIdResult = NvAPI_GPU_GetBusId(handles[i], &busId));
 
 				if (busIdResult == 0)
 					NvApiGpuHandles[busId] = handles[i];
@@ -455,7 +455,7 @@ int NvApiEnumTccGpus()
 
 	return result;
 }
-int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* voltageUV, int* frequencyDeltaKHz)
+int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* voltageUV, int* frequencyDeltaKHz,int checkCount=128)
 {
 	int result = -1;
 
@@ -465,7 +465,7 @@ int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* volt
 
 		clockMasks.version = MAKE_NVAPI_VERSION(clockMasks, 1);
 
-		LOG(result = NvAPI_GPU_GetClockBoostMask(NvApiGpuHandles[gpuBusId], &clockMasks));
+		(result = NvAPI_GPU_GetClockBoostMask(NvApiGpuHandles[gpuBusId], &clockMasks));
 
 		if (result == 0)
 		{
@@ -474,7 +474,7 @@ int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* volt
 			vfpCurve.version = MAKE_NVAPI_VERSION(vfpCurve, 1);
 			memcpy(vfpCurve.mask, clockMasks.mask, sizeof(vfpCurve.mask));
 
-			LOG(result = NvAPI_GPU_GetVFPCurve(NvApiGpuHandles[gpuBusId], &vfpCurve));
+			(result = NvAPI_GPU_GetVFPCurve(NvApiGpuHandles[gpuBusId], &vfpCurve));
 
 			if (result == 0)
 			{
@@ -483,29 +483,47 @@ int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* volt
 				clockTable.version = MAKE_NVAPI_VERSION(clockTable, 1);
 				memcpy(clockTable.mask, clockMasks.mask, sizeof(clockTable.mask));
 
-				LOG(result = NvAPI_GPU_GetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
+				(result = NvAPI_GPU_GetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
 
 				if (result == 0)
 				{
 					if (count)
 						*count = 0;
 
-					for (unsigned int i = 0; i < 255; ++i)
-					{
-						if ((clockMasks.clocks[i].enabled == 1) && (vfpCurve.clocks[i].clockType == 0))
+					if (checkCount != 128)
+						for (unsigned int i = 0; i < checkCount; ++i)
 						{
-							if (count)
+							if ((clockMasks.clocks[i].enabled == 1) && (vfpCurve.clocks[i].clockType == 0))
 							{
-								if (voltageUV)
-									voltageUV[*count] = vfpCurve.clocks[i].voltageUV;
+								if (count)
+								{
+									if (voltageUV)
+										voltageUV[*count] = vfpCurve.clocks[i].voltageUV;
 
-								if (frequencyDeltaKHz)
-									frequencyDeltaKHz[*count] = clockTable.clocks[i].frequencyDeltaKHz / 2;
+									if (frequencyDeltaKHz)
+										frequencyDeltaKHz[*count] = clockTable.clocks[i].frequencyDeltaKHz / 2;
 
-								++(*count);
+									++(*count);
+								}
 							}
 						}
-					}
+					else
+						for (unsigned int i = 0; i < 255; ++i)
+						{
+							if ((clockMasks.clocks[i].enabled == 1) && (vfpCurve.clocks[i].clockType == 0))
+							{
+								if (count)
+								{
+									if (voltageUV)
+										voltageUV[*count] = vfpCurve.clocks[i].voltageUV;
+
+									if (frequencyDeltaKHz)
+										frequencyDeltaKHz[*count] = clockTable.clocks[i].frequencyDeltaKHz / 2;
+
+									++(*count);
+								}
+							}
+						}
 				}
 			}
 		}
@@ -523,7 +541,7 @@ int NvApiSetCurve(unsigned int gpuBusId, unsigned int count, unsigned int* volta
 
 		clockMasks.version = MAKE_NVAPI_VERSION(clockMasks, 1);
 
-		LOG(result = NvAPI_GPU_GetClockBoostMask(NvApiGpuHandles[gpuBusId], &clockMasks));
+		(result = NvAPI_GPU_GetClockBoostMask(NvApiGpuHandles[gpuBusId], &clockMasks));
 
 		if (result == 0)
 		{
@@ -539,11 +557,11 @@ int NvApiSetCurve(unsigned int gpuBusId, unsigned int count, unsigned int* volta
 				vfpCurve.version = MAKE_NVAPI_VERSION(vfpCurve, 1);
 				memcpy(vfpCurve.mask, clockMasks.mask, sizeof(vfpCurve.mask));
 
-				LOG(result = NvAPI_GPU_GetVFPCurve(NvApiGpuHandles[gpuBusId], &vfpCurve));
+				(result = NvAPI_GPU_GetVFPCurve(NvApiGpuHandles[gpuBusId], &vfpCurve));
 
 				if (result == 0)
 				{
-					LOG(result = NvAPI_GPU_GetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
+					(result = NvAPI_GPU_GetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
 
 					if (result == 0)
 					{
@@ -567,13 +585,13 @@ int NvApiSetCurve(unsigned int gpuBusId, unsigned int count, unsigned int* volta
 							}
 						}
 
-						LOG(result = NvAPI_GPU_SetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
+						(result = NvAPI_GPU_SetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
 					}
 				}
 			}
 			else
 			{
-				LOG(result = NvAPI_GPU_SetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
+				(result = NvAPI_GPU_SetClockBoostTable(NvApiGpuHandles[gpuBusId], &clockTable));
 			}
 		}
 	}
@@ -666,7 +684,7 @@ BOOL CGPUInfo::Init()
 				//fprintf(curve, "ping -n 2 127.0.0.1\n");
 				LOG(fclose(curve));
 			}
-			LOG("NvApi Run OK\n");
+			//LOG("NvApi Run OK\n");
 		}
 		else
 			LOG("NvApi Run fail:%d\n", ret);
@@ -1414,12 +1432,34 @@ void CCore::Work()
 	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < 200) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
 	{
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
-		if (m_config.CurveUV_limit > 0)
-			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
-		else
-			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+		if (NvApiGpuHandles[gpuBusId] != 0)
+		{
+			unsigned int voltageUV_t[255] = { 0 };
+			int frequencyDeltaKHz_t[255] = { 0 };
+			int count_t = 2;
+			int ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
 
-		m_start_overclock = 1;
+			if (ret == 0)
+			{
+				
+				if (frequencyDeltaKHz_t[0] > 0)
+				{
+					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
+					if (freq_over_clock != m_config.GPUOverClock)
+					{
+						if (m_config.CurveUV_limit > 0)
+							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+						else
+							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+
+						if (m_start_overclock == 0)
+							LOG(frequencyDeltaKHz_t[0] / 500);
+							m_start_overclock = 1;
+					}
+				}
+			}
+		}
+		
 	}
 
 
