@@ -57,6 +57,7 @@ public:
 	CEdit m_ctlGPU4;//强制冷却至温度
 	CEdit m_ctlGPU5;//强制冷却至温度
 	CEdit m_ctlGPU10;//CurveUV_limit mv
+	CEdit m_ctlGPU11;//CurveUV_limit mv
 	//
 	int m_nDutyEditCtlID[2][10];//转速设置控件的id
 	BOOL m_bWindowVisible;//窗口是否显示
@@ -102,6 +103,7 @@ public:
 	afx_msg void OnEnChangeEditGpu4();
 	afx_msg void OnEnChangeEditGpu5();
 	afx_msg void OnEnChangeEditGpu10();
+	afx_msg void OnEnChangeEditGpu11();
 	afx_msg void OnBnClickedOk();
 	//int IntSize(char* x);
 	//static UINT NEAR WM_FIND = RegisterWindowMessage("COMMDLG_FIND");

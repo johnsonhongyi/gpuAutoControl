@@ -72,7 +72,7 @@ public:
 	void ReloadAPI();//初始化API
 	BOOL Init();//初始化API
 	BOOL LockFrequency(int frequency = 0);//锁定最大频率，可以用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
-	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780);//用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
+	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780, int overClock2 = 140);//用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
 
 protected:
 	HMODULE m_hGPUdll;
@@ -144,6 +144,7 @@ public:
 	int timelimit;//温控周期阈值
 	int GPU_LockClock; //初始化锁定频率
 	int CurveUV_limit; //初始化mv
+	int OverClock2; //初始化mv
 
 
 public:

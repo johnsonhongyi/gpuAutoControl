@@ -861,7 +861,7 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	return (rv1 && rv2 && rv3 && rv4);
 }
 
-BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV)
+BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,int overClock2)
 {
 	if (!m_hGPUdll)
 		return FALSE;
@@ -942,9 +942,9 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV)
 	int j = 0;
 	int limitUv = limitUV * 1000;
 	int frequency_DeltaKHz = (frequency - 20) * 500;
-	if (frequency_DeltaKHz > 725000)
+	if (overClock2 > 0 && frequency_DeltaKHz > overClock2 * 500)
 	{
-		frequency_DeltaKHz = 725000;
+		frequency_DeltaKHz = overClock2 * 500;
 	}
 	for (int i = 0; i < count; ++i)
 	{	
@@ -1000,6 +1000,7 @@ void CConfig::LoadDefault()
 	upClocklimit = 1600; //升频上限
 	timelimit = 3;    //统计时长
 	CurveUV_limit = 780; //Curve保护
+	OverClock2 = 145; //Curve保护145Mhz
 
 	int i = 0;
 	DutyList[0][i++] = upClockPercent;//90+  //占用率升频阈值
@@ -1009,6 +1010,7 @@ void CConfig::LoadDefault()
 	DutyList[0][i++] = upClocklimit;//70+
 	DutyList[0][i++] = timelimit;//65+
 	DutyList[0][i++] = CurveUV_limit;//780mv
+	DutyList[0][i++] = OverClock2;//145Mhz
 	//DutyList[0][i++] = 0;//60+
 	//DutyList[0][i++] = 0;//55+
 	//DutyList[0][i++] = 0;//50+
@@ -1413,9 +1415,9 @@ void CCore::Work()
 	{
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
 		if (m_config.CurveUV_limit > 0)
-			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit);
+			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
 		else
-			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock);
+			m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 
 		m_start_overclock = 1;
 	}
