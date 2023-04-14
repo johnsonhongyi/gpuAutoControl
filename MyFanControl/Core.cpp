@@ -314,7 +314,7 @@ int NvApiLoad()
 	char nvapiDllName[] = "nvapi.dll";
 #endif
 
-	LOG(nvapi = LoadLibraryA(nvapiDllName));
+	LOG(nvapi = LoadLibrary(nvapiDllName));
 
 	result = !(nvapi != 0);
 
@@ -411,7 +411,7 @@ int NvApiEnumGpus()
 				LOG(busIdResult = NvAPI_GPU_GetBusId(handles[i], &busId));
 				if (busIdResult == 0)
 				{
-					printf("init GpuGetBusId:%d\n", busId);
+					LOG("init GpuGetBusId:%d\n", busId);
 					gpuBusId = busId;
 					NvApiGpuHandles[busId] = handles[i];
 				}
@@ -616,15 +616,32 @@ CGPUInfo::~CGPUInfo()
 	}
 }
 
-unsigned int voltageUV[255] = { 0 };
-int frequencyDeltaKHz[255] = { 0 };
+
 
 BOOL CGPUInfo::Init()
 {
 	//add nvapioc
-	if (LogFileEnable)
-		LogFile = fopen("log.txt", "a");
+	//#define BUF_SIZE 260	
+	//char buffer[BUF_SIZE];
+	//char* p;
 
+	//p = _getcwd(buffer, BUF_SIZE);
+	//if (p == NULL)
+	//{
+	//	printf("The directory isError");
+	//}
+
+	//LOG("The RunDir: %s\n", buffer);
+	unsigned int voltageUV[255] = { 0 };
+	int frequencyDeltaKHz[255] = { 0 };
+
+	CString dirPath = GetExePath();
+	CString logPath = dirPath + "\\log.txt";
+	//int ch = _chdir(dirPath); //change working directory
+	if (LogFileEnable)
+		LogFile = fopen(logPath, "w");
+
+	nv_Api_init = 0; //初始化check 128
 	if (NvApi)
 	{
 		NvApi = false;
@@ -637,6 +654,16 @@ BOOL CGPUInfo::Init()
 				NvApiEnumTccGpus();
 
 				NvApi = true;
+				LOG("NvApiInit OK");
+
+				//nv_Api_init = 1; //init OK
+
+			}
+			else
+			{
+				LOG("NvApiInit fail");
+				nv_Api_init = 2; //init fail
+
 			}
 		}
 	}
@@ -656,21 +683,22 @@ BOOL CGPUInfo::Init()
 
 		if (ret == 0)
 		{
-			/*#define BUF_SIZE 260	
-			char buffer[BUF_SIZE];
-			char* p;
+			//#define BUF_SIZE 260	
+			//char buffer[BUF_SIZE];
+			//char* p;
 
-			p = getcwd(buffer, BUF_SIZE);
-			if (p == NULL)
-			{
-				printf("The directory isError");
-			}
+			//p = _getcwd(buffer, BUF_SIZE);
+			//if (p == NULL)
+			//{
+			//	printf("The directory isError");
+			//}
 
-			printf("The RunDir: %s\n", buffer);*/
+			//LOG("The RunDir: %s\n", buffer);
 
 			FILE* curve = 0;
+			CString curvePath = dirPath + "\\curve.bat";
 
-			LOG(curve = fopen("curve.bat", "w"));
+			LOG(curve = fopen(curvePath, "w"));
 
 			if (curve)
 			{
@@ -684,7 +712,8 @@ BOOL CGPUInfo::Init()
 				//fprintf(curve, "ping -n 2 127.0.0.1\n");
 				LOG(fclose(curve));
 			}
-			//LOG("NvApi Run OK\n");
+			else
+				LOG("NvApi init no FILE curve \n");
 		}
 		else
 			LOG("NvApi Run fail:%d\n", ret);
@@ -703,6 +732,7 @@ BOOL CGPUInfo::Init()
 	if (m_hGPUdll == NULL)
 	{
 		TRACE0("无法加载" + dllpth + "\n");
+		LOG("m_hGPUdll isNULL");
 		return FALSE;
 	}
 
@@ -744,6 +774,7 @@ BOOL CGPUInfo::Init()
 	if (m_pfnInitGPU_API())
 	{
 		TRACE0("InitGPU_API初始化失败。\n");
+		LOG("m_hGPUdll InitGPU_API初始化失败。\n");
 		FreeLibrary(m_hGPUdll);
 		m_hGPUdll = NULL;
 		return FALSE;
@@ -882,7 +913,10 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,int overClock2)
 {
 	if (!m_hGPUdll)
+	{
+		LOG("OverClockFrequency m_hGPUdll isNULL");
 		return FALSE;
+	}
 	int overClock = m_nStandardFrequency + frequency;
 	if (frequency < 0 || overClock > m_nMaxFrequency)
 		return FALSE;
@@ -952,47 +986,72 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 	//	AfxMessageBox("Lock_Frequency_MEM失败");
 	//
 
+	//
+
+	int ret = -1;
+	Sleep(2000);
+	int count1 = -1;
+	unsigned int voltageUV[255] = { 0 };
+	int frequencyDeltaKHz[255] = { 0 };
+	ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count1, voltageUV, frequencyDeltaKHz);
+	LOG("frequencyDeltaKHz reload:%d", frequencyDeltaKHz[0]/500);
+
 	//NvApiSetCurve
 	unsigned int voltageUV_OV[255] = { 0 };
 	int frequencyDeltaKHz_OV[255] = { 0 };
 	int count = sizeof(voltageUV)/sizeof(voltageUV[0]);
-	int ret = -1;
 	int j = 0;
 	int limitUv = limitUV * 1000;
-	int frequency_DeltaKHz = (frequency - 20) * 500;
-	if (overClock2 > 0 && frequency_DeltaKHz > overClock2 * 500)
+	int frequency_DeltaKHz_Value = (frequency - 20) * 500;
+	if (overClock2 > 0 && frequency_DeltaKHz_Value > overClock2 * 500)
 	{
-		frequency_DeltaKHz = overClock2 * 500;
+		frequency_DeltaKHz_Value = overClock2 * 500;
 	}
 	for (int i = 0; i < count; ++i)
-	{	
+	{
+		
 		if (frequencyDeltaKHz[i] > 0)
 		{ 
+			//if (voltageUV[i] > limitUv)
+			//{
+			//	voltageUV_OV[j] = voltageUV[i];
+			//	//frequencyDeltaKHz_OV[j] = frequencyDeltaKHz[i];
+			//	frequencyDeltaKHz_OV[j] = frequency_DeltaKHz_Value;
+			//	++j;
+			//}  //仅更新limit曲线
+
+			voltageUV_OV[i] = voltageUV[i];
 			if (voltageUV[i] > limitUv)
 			{
-				voltageUV_OV[j] = voltageUV[i];
 				//frequencyDeltaKHz_OV[j] = frequencyDeltaKHz[i];
-				frequencyDeltaKHz_OV[j] = frequency_DeltaKHz;
-				++j;
+				frequencyDeltaKHz_OV[i] = frequency_DeltaKHz_Value;
 			}
+			else
+			{
+				frequencyDeltaKHz_OV[i] = frequencyDeltaKHz[i];
+			}
+			++j;
+
 		}
 	}
 
 	count = j;
 	if (NvApiGpuHandles[gpuBusId] != 0)
 		ret = NvApiSetCurve(gpuBusId, count, voltageUV_OV, frequencyDeltaKHz_OV);
-		if (ret < 0)
-		{
-			CString str;
-			str.Format("%dmv SetCurveFail: %d", limitUV, frequencyDeltaKHz_OV[0] / 500);
-			AfxMessageBox(str);
-		}
-		else
+		if (ret == 0)
 		{
 			//CString str;
 			//str.Format("%dmv Curve OK:%d", limitUV,frequencyDeltaKHz_OV[0]/500);
 			//AfxMessageBox(str);
-			LOG("NvApi Run OK\n");
+			LOG("NvApi SetCurve OK");
+		}
+		else
+		{
+			LOG("NvApi SetCurve Fail",ret);
+			//LOG(sizeof(frequencyDeltaKHz_OV));
+			CString str;
+			str.Format("%dmv SetCurveFail: %d", limitUV, frequencyDeltaKHz_OV[0] / 500);
+			AfxMessageBox(str);
 		}
 
 
@@ -1436,16 +1495,22 @@ void CCore::Work()
 		{
 			unsigned int voltageUV_t[255] = { 0 };
 			int frequencyDeltaKHz_t[255] = { 0 };
-			int count_t = 2;
-			int ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
+			int count_t = -1;
+			int ret = -1;
+			if (m_GpuInfo.nv_Api_init == 1)
+				ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
+			else
+				ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t);
 
 			if (ret == 0)
 			{
 				
-				if (frequencyDeltaKHz_t[0] > 0)
+				if (frequencyDeltaKHz_t[0] > 0 && frequencyDeltaKHz_t[127] >0)
 				{
 					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
-					if (freq_over_clock != m_config.GPUOverClock)
+					int freq_over_clock_limit = frequencyDeltaKHz_t[127] / 500;
+					m_GpuInfo.nv_Api_init = 1;
+					if (freq_over_clock == freq_over_clock_limit  || (freq_over_clock_limit > m_config.OverClock2))
 					{
 						m_GpuInfo.ForcedRefreshGPU = 1;
 						LOG(frequencyDeltaKHz_t[0] / 500);
@@ -1454,6 +1519,30 @@ void CCore::Work()
 						else
 							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 
+					}
+
+					//else
+					//{
+					//	//if (m_GpuInfo.nv_Api_init == 2)
+					//	m_GpuInfo.nv_Api_init == 1;
+					//}
+				}
+				else if (frequencyDeltaKHz_t[0] > 0)
+				{
+					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
+					if (freq_over_clock != m_config.GPUOverClock )
+					{
+						m_GpuInfo.ForcedRefreshGPU = 1;
+						LOG(frequencyDeltaKHz_t[0] / 500);
+						if (m_config.CurveUV_limit > 0)
+							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+						else
+							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+
+						
+					}
+					else
+					{
 						if (m_start_overclock == 0)
 							m_start_overclock = 1;
 					}

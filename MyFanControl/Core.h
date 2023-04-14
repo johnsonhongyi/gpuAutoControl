@@ -67,6 +67,7 @@ public:
 	int ForcedRefreshGPU;//save重置GPU频率
 	int m_nLockClock;//已设置的最大核心频率
 	int m_nOverLockClock;//已设置的最大核心频率
+	int nv_Api_init;//nvapi init status 0,1 OK 2:fail
 public:
 	BOOL Update();//更新GPU频率和使用率
 	void ReloadAPI();//初始化API
@@ -171,9 +172,10 @@ protected:
 
 public:
 	BOOL m_nInit;//是否初始化，0未初始化，1初始化成功，2初始化失败
-	BOOL m_start_overclock;
+	BOOL m_start_overclock; //0, 1, 2 NvApiInit fail
 	int m_nExit;//退出信号，0，不退出，1，需要退出，2，内核已退出
 	HINSTANCE m_hInstDLL;//模块dll
+	//HINSTANCE m_nvapidll;//模块 nvapidll
 	CConfig m_config;//配置文件
 	CGPUInfo m_GpuInfo;//gpu频率控制对象
 	int m_nCurTemp[2];//当前温度
