@@ -673,11 +673,17 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 	m_ctlForceTemp.GetWindowTextA(str, 256);
 	int nForceTemp = atoi(str);
-	if (nForceTemp < 0 || nForceTemp > 225)
+	if (nForceTemp < 0 || nForceTemp > 350)
 	{
 		//AfxMessageBox("强制冷却温度必须为0-225");
 		AfxMessageBox("GPU超频过高");
 		return FALSE;
+	}
+	//else if (m_core.m_config.OverClock2 > 200 && nForceTemp > 200 && nForceTemp < 350)
+	else if (nForceTemp > 200 && nForceTemp < 350)
+	{
+		char str2[256];
+		AfxMessageBox("GPU超频设定警告，已超过200,上限350,注意黑屏风险");
 	}
 	//
 	m_ctlFrequency.GetWindowTextA(str, 256);
@@ -701,15 +707,22 @@ BOOL CMyFanControlDlg::CheckAndSave()
 			if (j ^ 4 && j ^ 5)
 			{
 				//if ((nDutyList[i][j] < 0 || nDutyList[i][j]>100) && j != 6 && j != 7) //CurveUV_limit spec
-				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>200) && j != 6) //CurveUV_limit spec
+				if ((nDutyList[i][j] < 0 || nDutyList[i][j]>350) && j != 6) //CurveUV_limit spec
 				{
 					char str2[256];
-					sprintf_s(str2, 256, "%s设定错误，必须为0-100", i ? "CPU" : "GPU");
+					sprintf_s(str2, 256, "%s设定错误，必须为0-350", i ? "CPU" : "GPU");
 					AfxMessageBox(str2);
 					return FALSE;
 				}
 				else
 				{
+					//if (j == 7 && (nDutyList[i][j] > 200 && nDutyList[i][j] <= 350))
+					//{
+					//	char str2[256];
+					//	sprintf_s(str2, 256, "%s设定警告，已超过200,上限350,注意黑屏风险", i ? "CPU" : "GPU");
+					//	AfxMessageBox(str2);
+
+					//}
 					if (j == 3 && nDutyList[i][j - 1] < nDutyList[i][j])
 					{
 						char str2[256];
