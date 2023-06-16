@@ -79,6 +79,7 @@ public:
 	void SetTray(PCSTR string);//设置托盘，鼠标放置显示的内容，如果传入NULL，则删除图标
 	afx_msg LRESULT OnShowTask(WPARAM wParam, LPARAM lParam);//系统托盘事件函数
 	afx_msg LRESULT OnTaskBarRestart(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnPowerBroadcast(WPARAM wParam, LPARAM lParam);//系统power事件函数
 	afx_msg void OnBnClickedCheckTakeover();
 	//afx_msg void OnBnClickedCheckForce();
 	//afx_msg void OnBnClickedCheckLinear();

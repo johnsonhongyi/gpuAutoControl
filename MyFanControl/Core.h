@@ -172,7 +172,7 @@ protected:
 
 public:
 	BOOL m_nInit;//是否初始化，0未初始化，1初始化成功，2初始化失败
-	BOOL m_start_overclock; //0, 1, 2 NvApiInit fail
+	int m_start_overclock; //0, 1, 2 NvApiInit fail
 	int m_nExit;//退出信号，0，不退出，1，需要退出，2，内核已退出
 	HINSTANCE m_hInstDLL;//模块dll
 	//HINSTANCE m_nvapidll;//模块 nvapidll
@@ -202,6 +202,7 @@ public:
 	void CalcStdDuty();//求得当前温度对应的负载（阶梯控制）
 	void ResetFan();//重置风扇为自动控制
 	void ResetGPUFrequancy();
+	void ResetSleepStatus();
 	void SetFanDuty();//设置风扇转速
 
 };

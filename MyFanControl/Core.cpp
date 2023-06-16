@@ -776,7 +776,7 @@ BOOL CGPUInfo::Init()
 		TRACE0("InitGPU_API初始化失败。\n");
 		LOG("m_hGPUdll InitGPU_API初始化失败。\n");
 		FreeLibrary(m_hGPUdll);
-		LOG("m_hGPUdll InitGPU_API初始化失败");
+		//LOG("m_hGPUdll InitGPU_API初始化失败");
 		m_hGPUdll = NULL;
 		return FALSE;
 	}
@@ -821,6 +821,7 @@ void CGPUInfo::ReloadAPI()
 	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
 	{
 		TRACE0("检测数据为0,重新加载NVGPU_DLL.dll。\n");
+		LOG("检测数据为0,重新加载NVGPU_DLL.dll。\n");
 		Init();
 	}
 
@@ -918,6 +919,7 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 		LOG("OverClockFrequency m_hGPUdll isNULL");
 		return FALSE;
 	}
+
 	int overClock = m_nStandardFrequency + frequency;
 	if (frequency < 0 || overClock > m_nMaxFrequency)
 		return FALSE;
@@ -1357,6 +1359,8 @@ void CCore::Work()
 	int lowClockLimit = 420;  //Lock 800 m_nGraphicsClock ==795
 	float upClockRatio = 1.05;
 	float downClockRatio = 0.97;
+	int limit_overclock = 200;
+	int resultLog = -1;
 	//m_core.m_config.Linear 线性控制
 	if (m_config.TakeOver)
 	{
@@ -1494,16 +1498,18 @@ void CCore::Work()
 			}
 		}
 	}
-
-	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < 200) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
+	
+	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
 	{
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
+		Sleep(2000);
 		if (NvApiGpuHandles[gpuBusId] != 0)
 		{
 			unsigned int voltageUV_t[255] = { 0 };
 			int frequencyDeltaKHz_t[255] = { 0 };
 			int count_t = -1;
 			int ret = -1;
+			BOOL oc_ret = 1;
 			if (m_GpuInfo.nv_Api_init == 1)
 				ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
 			else
@@ -1517,15 +1523,20 @@ void CCore::Work()
 					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
 					int freq_over_clock_limit = frequencyDeltaKHz_t[127] / 500;
 					m_GpuInfo.nv_Api_init = 1;
+					LOG(resultLog = freq_over_clock);
+					LOG(resultLog = freq_over_clock_limit);
 					if (freq_over_clock == freq_over_clock_limit  || (freq_over_clock_limit > m_config.OverClock2) || ((freq_over_clock > m_config.OverClock2) && (freq_over_clock_limit < m_config.OverClock2)) )
 					{
 						m_GpuInfo.ForcedRefreshGPU = 1;
-						LOG(frequencyDeltaKHz_t[0] / 500);
+						LOG(resultLog = frequencyDeltaKHz_t[0] / 500);
 						if (m_config.CurveUV_limit > 0)
-							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+							if (!oc_ret)
+								m_start_overclock = 2;
 						else
 							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
-
+						LOG(resultLog =  m_config.GPUOverClock);
+					
 					}
 
 					//else
@@ -1537,21 +1548,26 @@ void CCore::Work()
 				else if (frequencyDeltaKHz_t[0] > 0)
 				{
 					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
+					LOG(resultLog = freq_over_clock);
+					LOG(resultLog = m_config.GPUOverClock);
 					if (freq_over_clock != m_config.GPUOverClock )
 					{
 						m_GpuInfo.ForcedRefreshGPU = 1;
 						LOG(frequencyDeltaKHz_t[0] / 500);
 						if (m_config.CurveUV_limit > 0)
-							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+							if (!oc_ret)
+								m_start_overclock = 2;
 						else
-							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
-
+							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+						LOG(resultLog =  freq_over_clock);
 						
 					}
 					else
 					{
 						if (m_start_overclock == 0)
 							m_start_overclock = 1;
+						LOG(resultLog =  m_start_overclock);
 					}
 				}
 			}
@@ -1734,6 +1750,15 @@ void CCore::ResetFan()
 void CCore::ResetGPUFrequancy()
 {
 	m_GpuInfo.ForcedRefreshGPU = 1;
+}
+
+void CCore::ResetSleepStatus()
+{
+	int resultLog = -1;
+	m_start_overclock = 0;
+	Sleep(10000);
+	LOG(resultLog = m_start_overclock);
+	
 }
 
 void CCore::SetFanDuty()

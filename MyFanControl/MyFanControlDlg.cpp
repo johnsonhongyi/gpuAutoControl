@@ -223,6 +223,7 @@ BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_GPU10, &CMyFanControlDlg::OnEnChangeEditGpu10)
 	ON_EN_CHANGE(IDC_EDIT_GPU11, &CMyFanControlDlg::OnEnChangeEditGpu11)
 	ON_BN_CLICKED(IDOK, &CMyFanControlDlg::OnBnClickedOk)
+	ON_MESSAGE(WM_POWERBROADCAST, OnPowerBroadcast)
 
 END_MESSAGE_MAP()
 
@@ -934,7 +935,35 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+// Handle the WM_POWERBROADCAST message to process a message concerning power management
+// such as going to Sleep or Waking Up.
+LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
+{
+	LRESULT  lrProcessed = 0;  // indicate if message processed or not
 
+	switch (wParam) {
+	case PBT_APMPOWERSTATUSCHANGE:
+		TRACE0("PBT_APMPOWERSTATUSCHANGE  received\n");
+		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");
+		break;
+	case PBT_APMRESUMEAUTOMATIC:
+		TRACE0("PBT_APMRESUMEAUTOMATIC  received\n");
+		//AfxMessageBox("PBT_APM»½ÐÑ×Ô¶¯  received\n");
+		break;
+	case PBT_APMRESUMESUSPEND:
+		m_core.ResetSleepStatus();
+		TRACE0("PBT_APMRESUMESUSPEND  received\n");
+		//AfxMessageBox("PBT_»½ÐÑ  received\n");
+		break;
+	case PBT_APMSUSPEND:
+		TRACE0("PBT_APMSUSPEND  received\n");
+		//AfxMessageBox("PBT_Ë¯Ãß  received\n");
+		break;
+	}
+
+	// indicate if framework needs to handle message or we did ourselves.
+	return lrProcessed;
+}
 
 
 //LRESULT CALLBACK WndProc(HWND hWnd, UINT uMessage, WPARAM wParam,
