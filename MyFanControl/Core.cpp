@@ -302,11 +302,13 @@ intptr_t Log(const char* expression, const char* fileName, unsigned int line, in
 			//local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result, (unsigned int)sizeof(result) * 2, result);
 		
 		//fprintf(LogFile, expression,"\n");
-		//fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d]",
-		fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-60s %-6zd\n",
+		//fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-60s %-6zd\n",
+		fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d]",
 			local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result);
-		//fprintf(LogFile,expression);
-		//fprintf(LogFile," %-10zd\n", result);
+		fprintf(LogFile,"set: %-12zd ", result);
+		fprintf(LogFile,expression);
+		fprintf(LogFile, " \n");
+
 
 		//fprintf(LogFile, #X ": Time:%s, File:%s(%d) " #Y  "\n", __TIMESTAMP__, __FILE__, __LINE__)
 	
@@ -1765,13 +1767,16 @@ void CCore::ResetFan()
 void CCore::ResetGPUFrequancy()
 {
 	m_GpuInfo.ForcedRefreshGPU = 1;
+	//¼ì²âÇúÏß±ä»¯
+	m_start_overclock = 0;
+
 }
 
 void CCore::ResetSleepStatus()
 {
 	int resultLog = -1;
 	m_start_overclock = 0;
-	Sleep(10000);
+	Sleep(8000);
 	LOG(resultLog = m_start_overclock);
 	
 }

@@ -831,6 +831,7 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 	// TODO:  在此添加控件通知处理程序代码
 	m_core.m_config.LoadDefault();
 	m_core.m_GpuInfo.ReloadAPI();
+	m_core.ResetGPUFrequancy();
 	UpdateGui(TRUE);
 }
 
@@ -840,6 +841,7 @@ void CMyFanControlDlg::OnBnClickedButtonLoad()
 	// TODO:  在此添加控件通知处理程序代码
 	m_core.m_GpuInfo.ReloadAPI();
 	m_core.m_config.LoadConfig();
+	m_core.ResetGPUFrequancy();
 	UpdateGui(TRUE);
 }
 
