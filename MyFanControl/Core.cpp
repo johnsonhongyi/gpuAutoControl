@@ -79,7 +79,12 @@ void* NvApiGpuHandles[128] = { 0 };
 
 #define LOG(expression) Log(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t) (expression))
 
+
 FILE* LogFile = 0;
+
+//#define LOG(X, Y) fprintf (LogFile, #X ": Time:%s, File:%s(%d) " #Y  "\n", __TIMESTAMP__, __FILE__, __LINE__)
+//#define LOG(X, Y) fprintf (LogFile, #X ": Time:%s, File:%s(%d) " #Y  "\n", __TIMESTAMP__, __FILE__, __LINE__)
+
 
 #define MAKE_NVAPI_VERSION(type, version) ((unsigned int)(sizeof(type) | ((version) << 16)))
 
@@ -293,9 +298,18 @@ intptr_t Log(const char* expression, const char* fileName, unsigned int line, in
 		time_t t = time(0);
 		tm* local = localtime(&t);
 
-		fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-102s %-20zd (0x%0*zX)\n",
-			local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result, (unsigned int)sizeof(result) * 2, result);
+		//fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-102s %-20zd (0x%0*zX)\n",
+			//local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result, (unsigned int)sizeof(result) * 2, result);
+		
+		//fprintf(LogFile, expression,"\n");
+		//fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d]",
+		fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-60s %-6zd\n",
+			local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result);
+		//fprintf(LogFile,expression);
+		//fprintf(LogFile," %-10zd\n", result);
 
+		//fprintf(LogFile, #X ": Time:%s, File:%s(%d) " #Y  "\n", __TIMESTAMP__, __FILE__, __LINE__)
+	
 		fflush(LogFile);
 	}
 
@@ -711,6 +725,7 @@ BOOL CGPUInfo::Init()
 				fprintf(curve, "\n");
 				//fprintf(curve, "ping -n 2 127.0.0.1\n");
 				LOG(fclose(curve));
+				LOG("fclose:%d\n", ret);
 			}
 			else
 				LOG("NvApi init no FILE curve \n");

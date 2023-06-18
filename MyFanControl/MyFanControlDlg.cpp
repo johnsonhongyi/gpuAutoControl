@@ -944,6 +944,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	switch (wParam) {
 	case PBT_APMPOWERSTATUSCHANGE:
 		TRACE0("PBT_APMPOWERSTATUSCHANGE  received\n");
+		m_core.ResetSleepStatus();
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
@@ -951,8 +952,8 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APM»½ÐÑ×Ô¶¯  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
-		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
+		m_core.ResetSleepStatus();
 		//AfxMessageBox("PBT_»½ÐÑ  received\n");
 		break;
 	case PBT_APMSUSPEND:
