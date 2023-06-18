@@ -1776,7 +1776,7 @@ void CCore::ResetSleepStatus()
 {
 	int resultLog = -1;
 	m_start_overclock = 0;
-	Sleep(8000);
+	Sleep(10000);
 	LOG(resultLog = m_start_overclock);
 	
 }
