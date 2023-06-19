@@ -962,7 +962,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APM»½ÐÑ×Ô¶¯  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
-		//m_core.ResetSleepStatus();
+		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
 		//AfxMessageBox("PBT_»½ÐÑ  received\n");
 		break;
