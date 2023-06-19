@@ -1376,7 +1376,7 @@ void CCore::Work()
 	int lowClockLimit = 420;  //Lock 800 m_nGraphicsClock ==795
 	float upClockRatio = 1.05;
 	float downClockRatio = 0.97;
-	int limit_overclock = 200;
+	int limit_overclock = 350;
 	int resultLog = -1;
 	//m_core.m_config.Linear ÏßÐÔ¿ØÖÆ
 	if (m_config.TakeOver)
@@ -1516,12 +1516,15 @@ void CCore::Work()
 		}
 	}
 	
-	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
+	//if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
+	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_start_overclock == 0))
+
 	{
 		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
 		Sleep(2000);
 		if (NvApiGpuHandles[gpuBusId] != 0)
 		{
+			LOG("NvApiGpuHandles[gpuBusId]");
 			unsigned int voltageUV_t[255] = { 0 };
 			int frequencyDeltaKHz_t[255] = { 0 };
 			int count_t = -1;
@@ -1555,6 +1558,10 @@ void CCore::Work()
 						LOG(resultLog =  m_config.GPUOverClock);
 					
 					}
+					else
+					{
+						LOG("frequencyDeltaKH check same,no change");
+					}
 
 					//else
 					//{
@@ -1587,6 +1594,10 @@ void CCore::Work()
 						LOG(resultLog =  m_start_overclock);
 					}
 				}
+			}
+			else
+			{
+				LOG("NvApiGetCurve error ret:%d", ret);
 			}
 		}
 		
@@ -1775,8 +1786,9 @@ void CCore::ResetGPUFrequancy()
 void CCore::ResetSleepStatus()
 {
 	int resultLog = -1;
+	Sleep(8000);
+	LOG("ResetSleepStatus");
 	m_start_overclock = 0;
-	Sleep(10000);
 	LOG(resultLog = m_start_overclock);
 	
 }

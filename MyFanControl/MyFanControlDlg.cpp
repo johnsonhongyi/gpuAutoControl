@@ -939,6 +939,14 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 
 // Handle the WM_POWERBROADCAST message to process a message concerning power management
 // such as going to Sleep or Waking Up.
+
+//http://brightguo.com/windows-sleep-and-resume-event/
+//如果系统自动起来（非人为点击操作），会发送PBT_APMRESUMEAUTOMATIC事件
+//
+//如果系统因人为唤醒（鼠标、键盘、电源键），会先发送PBT_APMRESUMEAUTOMATIC事件，再发送PBT_APMRESUMESUSPEND事件（休眠唤醒事件），同时系统点亮屏幕。这时你的程序需要重新打开因为系统睡眠时关闭的文件。
+//
+//而在PBT_APMRESUMESUSPEND中，说，只有窗口先收到 PBT_APMSUSPEND事件（开始休眠的事件）后，才会再收到它，否则只能收到 PBT_APMRESUMECRITICAL事件
+
 LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT  lrProcessed = 0;  // indicate if message processed or not
@@ -949,11 +957,12 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");	
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
+		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMEAUTOMATIC  received\n");
 		//AfxMessageBox("PBT_APM唤醒自动  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
-		m_core.ResetSleepStatus();
+		//m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
 		//AfxMessageBox("PBT_唤醒  received\n");
 		break;
