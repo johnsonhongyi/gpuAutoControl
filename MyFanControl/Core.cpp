@@ -841,13 +841,34 @@ void CGPUInfo::ReloadAPI()
 		LOG("检测数据为0,重新加载NVGPU_DLL.dll。\n");
 		Init();
 	}
+	else {
+		if (!m_hGPUdll)
+		{
+			//TRACE0("无法加载" + dllpth + "\n");
+			LOG("m_hGPUdll isNULL and reload Init");
+			m_pfnCloseGPU_API();
+			FreeLibrary(m_hGPUdll);
+			m_hGPUdll = NULL;
+			if (NvApi)
+				NvApiFree();
+			//FreeLibrary(nvapi);
 
+			if (LogFile)
+				fclose(LogFile);
+
+			Init();
+		}
+		else{
+			LOG("m_hGPUdll Not NULL, no reload");
+		}
+	}
 	//return m_Gpu;
 }
 
 BOOL CGPUInfo::Update()
 {
 	if (!m_hGPUdll)
+		LOG("m_hGPUdll isNULL,Need Reload");
 		return FALSE;
 	if (!m_pfnCheck_GPU_VRAM_Clock())
 		return FALSE;
