@@ -655,7 +655,8 @@ BOOL CGPUInfo::Init()
 	CString logPath = dirPath + "\\log.txt";
 	//int ch = _chdir(dirPath); //change working directory
 	if (LogFileEnable)
-		LogFile = fopen(logPath, "w");
+		LogFile = fopen(logPath, "a");
+		//LogFile = fopen(logPath, "w");
 
 	nv_Api_init = 0; //≥ı ºªØcheck 128
 	if (NvApi)
@@ -859,7 +860,27 @@ void CGPUInfo::ReloadAPI()
 			Init();
 		}
 		else{
-			LOG("m_hGPUdll Not NULL, no reload");
+			if (m_pfnInitGPU_API())
+			{
+				TRACE0("InitGPU_API ß∞‹°£\n");
+				LOG("m_hGPUdll InitGPU_API ß∞‹°£\n");
+				//m_pfnCloseGPU_API();
+				FreeLibrary(m_hGPUdll);
+				m_hGPUdll = NULL;
+				if (NvApi)
+					NvApiFree();
+				//FreeLibrary(nvapi);
+
+				if (LogFile)
+					fclose(LogFile);
+
+				Init();
+				LOG("m_pfnInitGPU_API NULL, reload");
+			}
+			else {
+				LOG("m_hGPUdll and GPU_API Not NULL, no reload");
+			}
+
 		}
 	}
 	//return m_Gpu;

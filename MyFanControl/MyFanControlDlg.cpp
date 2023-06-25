@@ -957,17 +957,19 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");	
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
+		m_core.m_GpuInfo.ReloadAPI();
 		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMEAUTOMATIC  received\n");
 		//AfxMessageBox("PBT_APM»½ÐÑ×Ô¶¯  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
+		m_core.m_GpuInfo.ReloadAPI();
 		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
 		//AfxMessageBox("PBT_»½ÐÑ  received\n");
 		break;
 	case PBT_APMSUSPEND:
-		//m_core.ResetSleepStatus();
+		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMSUSPEND  received\n");
 		//AfxMessageBox("PBT_Ë¯Ãß  received\n");
 		break;
