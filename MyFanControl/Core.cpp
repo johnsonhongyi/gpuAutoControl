@@ -431,10 +431,10 @@ int NvApiEnumGpus()
 					gpuBusId = busId;
 					NvApiGpuHandles[busId] = handles[i];
 				}
-				//else
-				//	{
-				//		printf("not find Gpu ,GetBusId is wrong\n");
-				//	}
+				else
+					{
+						LOG("init GpuGetBusId :%d not find Gpu ,GetBusId is wrong\n",i);
+					}
 
 			}
 		}
@@ -728,7 +728,7 @@ BOOL CGPUInfo::Init()
 				fprintf(curve, "\n");
 				//fprintf(curve, "ping -n 2 127.0.0.1\n");
 				LOG(fclose(curve));
-				LOG("fclose:%d\n", ret);
+				//LOG("fclose:%d\n", ret);
 			}
 			else
 				LOG("NvApi init no FILE curve \n");
@@ -864,7 +864,7 @@ void CGPUInfo::ReloadAPI()
 			{
 				TRACE0("InitGPU_APIÊ§°Ü¡£\n");
 				LOG("m_hGPUdll InitGPU_APIÊ§°Ü¡£\n");
-				//m_pfnCloseGPU_API();
+				m_pfnCloseGPU_API();
 				FreeLibrary(m_hGPUdll);
 				m_hGPUdll = NULL;
 				if (NvApi)
@@ -1566,7 +1566,7 @@ void CCore::Work()
 		Sleep(2000);
 		if (NvApiGpuHandles[gpuBusId] != 0)
 		{
-			LOG("NvApiGpuHandles[gpuBusId]");
+			LOG("Check NvApiGpuHandles[%d] : %d ",busId, NvApiGpuHandles[gpuBusId]);
 			unsigned int voltageUV_t[255] = { 0 };
 			int frequencyDeltaKHz_t[255] = { 0 };
 			int count_t = -1;
@@ -1641,6 +1641,10 @@ void CCore::Work()
 			{
 				LOG("NvApiGetCurve error ret:%d", ret);
 			}
+		}
+		else 
+		{
+			LOG("Check NvApiGpuHandles[%d] : Fail:%d", busId, NvApiGpuHandles[gpuBusId]);
 		}
 		
 	}
