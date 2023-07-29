@@ -683,7 +683,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	//else if (m_core.m_config.OverClock2 > 200 && nForceTemp > 200 && nForceTemp < 350)
 	else if (nForceTemp > 200 && nForceTemp < 350)
 	{
-		char str2[256];
+		//char str2[256];
 		AfxMessageBox("GPU超频设定警告，已超过200,上限350,注意黑屏风险");
 	}
 	//
@@ -771,7 +771,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 	if (!m_core.m_config.TakeOver)
 	{
-		if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2);   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+		if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
 			m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
 
 	}
@@ -957,13 +957,13 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");	
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
-		m_core.m_GpuInfo.ReloadAPI();
+		m_core.m_GpuInfo.ReloadAPI(1);
 		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMEAUTOMATIC  received\n");
 		//AfxMessageBox("PBT_APM唤醒自动  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
-		m_core.m_GpuInfo.ReloadAPI();
+		m_core.m_GpuInfo.ReloadAPI(1);
 		m_core.ResetSleepStatus();
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
 		//AfxMessageBox("PBT_唤醒  received\n");

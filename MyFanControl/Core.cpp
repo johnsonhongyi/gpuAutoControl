@@ -304,9 +304,10 @@ intptr_t Log(const char* expression, const char* fileName, unsigned int line, in
 		//fprintf(LogFile, expression,"\n");
 		//fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d] %-60s %-6zd\n",
 		fprintf(LogFile, "[%02d.%02d.%04d %02d:%02d:%02d][%8s:%04d]",
-			local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result);
+			local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line);
+			//local->tm_mday, local->tm_mon + 1, local->tm_year + 1900, local->tm_hour, local->tm_min, local->tm_sec, fileName, line, expression, result);
 		fprintf(LogFile,"set: %-12zd ", result);
-		fprintf(LogFile,expression);
+		fprintf(LogFile,expression );
 		fprintf(LogFile, " \n");
 
 
@@ -833,7 +834,7 @@ BOOL CGPUInfo::Init()
 	
 	return TRUE;
 }
-void CGPUInfo::ReloadAPI()
+void CGPUInfo::ReloadAPI(int forceinit)
 {
 	//if (m_nGPU_Temp ^ 0 && m_nGraphicsClock ^ 0 && m_nMemoryClock ^ 0)
 	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
@@ -860,7 +861,7 @@ void CGPUInfo::ReloadAPI()
 			Init();
 		}
 		else{
-			if (m_pfnInitGPU_API())
+			if (m_pfnInitGPU_API() || forceinit == 0)
 			{
 				TRACE0("InitGPU_APIÊ§°Ü¡£\n");
 				LOG("m_hGPUdll InitGPU_APIÊ§°Ü¡£\n");
@@ -1559,94 +1560,109 @@ void CCore::Work()
 	}
 	
 	//if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
-	if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_start_overclock == 0))
-
+	//if ((m_config.GPUOverClock >= 0 || m_config.GPUOverClock < limit_overclock) && (m_start_overclock == 0))
+	if ((m_config.GPUOverClock >= 0 && m_config.GPUOverClock < limit_overclock))
 	{
-		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
-		Sleep(2000);
-		if (NvApiGpuHandles[gpuBusId] != 0)
+		if (m_start_overclock == 0)
 		{
-			LOG("Check NvApiGpuHandles[%d] : %d ",busId, NvApiGpuHandles[gpuBusId]);
-			unsigned int voltageUV_t[255] = { 0 };
-			int frequencyDeltaKHz_t[255] = { 0 };
-			int count_t = -1;
-			int ret = -1;
-			BOOL oc_ret = 1;
-			if (m_GpuInfo.nv_Api_init == 1)
-				ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
-			else
-				ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t);
-
-			if (ret == 0)
+			//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
+			LOG(resultLog = m_config.GPUOverClock);
+			Sleep(2000);
+			if (NvApiGpuHandles[gpuBusId] != 0)
 			{
-				
-				if (frequencyDeltaKHz_t[0] > 0 && frequencyDeltaKHz_t[127] >0)
-				{
-					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
-					int freq_over_clock_limit = frequencyDeltaKHz_t[127] / 500;
-					m_GpuInfo.nv_Api_init = 1;
-					LOG(resultLog = freq_over_clock);
-					LOG(resultLog = freq_over_clock_limit);
-					if (freq_over_clock == freq_over_clock_limit  || (freq_over_clock_limit > m_config.OverClock2) || ((freq_over_clock > m_config.OverClock2) && (freq_over_clock_limit < m_config.OverClock2)) )
-					{
-						m_GpuInfo.ForcedRefreshGPU = 1;
-						LOG(resultLog = frequencyDeltaKHz_t[0] / 500);
-						if (m_config.CurveUV_limit > 0)
-							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
-							if (!oc_ret)
-								m_start_overclock = 2;
-						else
-							m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
-						LOG(resultLog =  m_config.GPUOverClock);
-					
-					}
-					else
-					{
-						LOG("frequencyDeltaKH check same,no change");
-					}
+				LOG("Check NvApiGpuHandles[%d] : %d ", busId, NvApiGpuHandles[gpuBusId]);
+				unsigned int voltageUV_t[255] = { 0 };
+				int frequencyDeltaKHz_t[255] = { 0 };
+				int count_t = -1;
+				int ret = -1;
+				BOOL oc_ret = 1;
+				if (m_GpuInfo.nv_Api_init == 1)
+					ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
+				else
+					ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t);
 
-					//else
-					//{
-					//	//if (m_GpuInfo.nv_Api_init == 2)
-					//	m_GpuInfo.nv_Api_init == 1;
-					//}
-				}
-				else if (frequencyDeltaKHz_t[0] > 0)
+				if (ret == 0)
 				{
-					int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
-					LOG(resultLog = freq_over_clock);
-					LOG(resultLog = m_config.GPUOverClock);
-					if (freq_over_clock != m_config.GPUOverClock )
+
+					if (frequencyDeltaKHz_t[0] > 0 && frequencyDeltaKHz_t[127] > 0)
 					{
-						m_GpuInfo.ForcedRefreshGPU = 1;
-						LOG(frequencyDeltaKHz_t[0] / 500);
-						if (m_config.CurveUV_limit > 0)
-							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+						int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
+						int freq_over_clock_limit = frequencyDeltaKHz_t[127] / 500;
+						m_GpuInfo.nv_Api_init = 1;
+						LOG(resultLog = freq_over_clock);
+						LOG(resultLog = freq_over_clock_limit);
+						if (freq_over_clock == freq_over_clock_limit || (freq_over_clock_limit > m_config.OverClock2) || ((freq_over_clock > m_config.OverClock2) && (freq_over_clock_limit < m_config.OverClock2)))
+						{
+							m_GpuInfo.ForcedRefreshGPU = 1;
+							LOG(resultLog = frequencyDeltaKHz_t[0] / 500);
+							if (m_config.CurveUV_limit > 0)
+								oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
 							if (!oc_ret)
 								m_start_overclock = 2;
+							else
+								m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+							LOG(resultLog = m_config.GPUOverClock);
+
+						}
 						else
-							oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
-						LOG(resultLog =  freq_over_clock);
-						
+						{
+							LOG("frequencyDeltaKH check same,no change");
+						}
+
+						//else
+						//{
+						//	//if (m_GpuInfo.nv_Api_init == 2)
+						//	m_GpuInfo.nv_Api_init == 1;
+						//}
 					}
-					else
+					else if (frequencyDeltaKHz_t[0] > 0)
 					{
+						int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
+						LOG(resultLog = freq_over_clock);
+						LOG(resultLog = m_config.GPUOverClock);
+						if (freq_over_clock != m_config.GPUOverClock)
+						{
+							m_GpuInfo.ForcedRefreshGPU = 1;
+							LOG(frequencyDeltaKHz_t[0] / 500);
+							if (m_config.CurveUV_limit > 0)
+								oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.CurveUV_limit, m_config.OverClock2);
+							if (!oc_ret)
+								m_start_overclock = 2;
+							else
+								oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
+							LOG(resultLog = freq_over_clock);
+
+						}
+						else
+						{
+							if (m_start_overclock == 0)
+								m_start_overclock = 1;
+							LOG(resultLog = m_start_overclock);
+						}
+					}
+					else 
+					{
+
+						LOG("NvApiGet check frequencyDeltaKHz_t");
+						LOG( resultLog = frequencyDeltaKHz_t[0] / 500);
 						if (m_start_overclock == 0)
 							m_start_overclock = 1;
-						LOG(resultLog =  m_start_overclock);
 					}
+				}
+				else
+				{
+					LOG("NvApiGetCurve error ret:%d", ret);
 				}
 			}
 			else
 			{
-				LOG("NvApiGetCurve error ret:%d", ret);
+				LOG("Check NvApiGpuHandles[%d] : Fail:%d", busId, NvApiGpuHandles[gpuBusId]);
 			}
 		}
-		else 
-		{
-			LOG("Check NvApiGpuHandles[%d] : Fail:%d", busId, NvApiGpuHandles[gpuBusId]);
-		}
-		
+	}
+	else
+	{
+		LOG(resultLog = m_config.GPUOverClock);
 	}
 
 

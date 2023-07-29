@@ -70,7 +70,7 @@ public:
 	int nv_Api_init;//nvapi init status 0,1 OK 2:fail
 public:
 	BOOL Update();//更新GPU频率和使用率
-	void ReloadAPI();//初始化API
+	void ReloadAPI(int forceinit = 0);//初始化API
 	BOOL Init();//初始化API
 	BOOL LockFrequency(int frequency = 0);//锁定最大频率，可以用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
 	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780, int overClock2 = 140);//用于超频，应小于m_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)，若设置0，则还原设置
