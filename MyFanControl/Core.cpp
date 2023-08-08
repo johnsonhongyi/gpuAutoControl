@@ -1561,12 +1561,17 @@ void CCore::Work()
 	
 	//if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
 	//if ((m_config.GPUOverClock >= 0 || m_config.GPUOverClock < limit_overclock) && (m_start_overclock == 0))
+	if (m_start_overclock == 0)
+	{
+		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
+		LOG(resultLog = m_config.GPUOverClock);
+	}
 	if ((m_config.GPUOverClock >= 0 && m_config.GPUOverClock < limit_overclock))
 	{
 		if (m_start_overclock == 0)
 		{
 			//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
-			LOG(resultLog = m_config.GPUOverClock);
+			//LOG(resultLog = m_config.GPUOverClock);
 			Sleep(2000);
 			if (NvApiGpuHandles[gpuBusId] != 0)
 			{

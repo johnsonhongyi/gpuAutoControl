@@ -435,6 +435,31 @@ void CMyFanControlDlg::OnTimer(UINT_PTR nIDEvent)
 	//	OnOK();
 	//}
 
+	nCheckThreadCount++;
+	if ( m_core.m_start_overclock == 0 && nCheckThreadCount > 150)//内核已经15秒未完成一个循环，认为卡死，结束程序
+	{
+		//KillTimer(0);
+		//m_core.m_nExit = 2;
+		if (m_hCoreThread != NULL)
+		{
+			TerminateThread(m_hCoreThread, -1);//强制结束进程
+			CloseHandle(m_hCoreThread);
+			m_hCoreThread = NULL;
+			//MessageBox("检测到工作线程卡死，Timer尝试重新创建线程。");
+			//OnOK();
+			Sleep(1000);
+		}
+		if (m_hCoreThread == NULL)
+		{
+			DWORD dwThreadID = 0;
+			m_hCoreThread = CreateThread(NULL, NULL, CoreThread, this, NULL, &dwThreadID);
+		}
+		//SetTimer(0, 100, NULL);
+		m_core.m_bForcedRefresh = TRUE;    //wakeup set m_bForcedRefresh
+		nCheckThreadCount = 0;
+
+	}
+
 	if (m_core.m_nInit != 1)
 		return;
 
@@ -832,6 +857,24 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 	m_core.m_config.LoadDefault();
 	m_core.m_GpuInfo.ReloadAPI();
 	m_core.ResetGPUFrequancy();
+
+	if (m_hCoreThread != NULL) 
+	{
+		TerminateThread(m_hCoreThread, -1);//强制结束进程
+		CloseHandle(m_hCoreThread);
+		m_hCoreThread = NULL;
+		//MessageBox("检测到工作线程卡死，程序将立刻结束，尝试重新创建线程。");
+		//OnOK();
+	}
+
+	if (m_hCoreThread == NULL)
+	{
+		DWORD dwThreadID = 0;
+		m_hCoreThread = CreateThread(NULL, NULL, CoreThread, this, NULL, &dwThreadID);
+		m_core.m_bForcedRefresh = TRUE;
+	}
+	//SetTimer(0, 100, NULL);
+
 	UpdateGui(TRUE);
 }
 
@@ -839,7 +882,7 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 void CMyFanControlDlg::OnBnClickedButtonLoad()
 {
 	// TODO:  在此添加控件通知处理程序代码
-	m_core.m_GpuInfo.ReloadAPI();
+	//m_core.m_GpuInfo.ReloadAPI();
 	m_core.m_config.LoadConfig();
 	m_core.ResetGPUFrequancy();
 	UpdateGui(TRUE);
@@ -957,14 +1000,21 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");	
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
-		m_core.m_GpuInfo.ReloadAPI(1);
-		m_core.ResetSleepStatus();
+		if (m_core.m_start_overclock == 1)
+		{
+			//m_core.m_GpuInfo.ReloadAPI(1);
+			m_core.ResetSleepStatus();
+		}
 		TRACE0("PBT_APMRESUMEAUTOMATIC  received\n");
 		//AfxMessageBox("PBT_APM唤醒自动  received\n");
 		break;
 	case PBT_APMRESUMESUSPEND:
-		m_core.m_GpuInfo.ReloadAPI(1);
-		m_core.ResetSleepStatus();
+		if (m_core.m_start_overclock == 1)
+		{
+			//m_core.m_GpuInfo.ReloadAPI(1);
+			m_core.ResetSleepStatus();
+			//SetTimer(0, 100, NULL);
+		}
 		TRACE0("PBT_APMRESUMESUSPEND  received\n");
 		//AfxMessageBox("PBT_唤醒  received\n");
 		break;
