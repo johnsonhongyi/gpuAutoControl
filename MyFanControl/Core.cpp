@@ -656,8 +656,8 @@ BOOL CGPUInfo::Init()
 	CString logPath = dirPath + "\\log.txt";
 	//int ch = _chdir(dirPath); //change working directory
 	if (LogFileEnable)
-		LogFile = fopen(logPath, "a");
-		//LogFile = fopen(logPath, "w");
+		//LogFile = fopen(logPath, "a");
+		LogFile = fopen(logPath, "w");
 
 	nv_Api_init = 0; //≥ı ºªØcheck 128
 	if (NvApi)
