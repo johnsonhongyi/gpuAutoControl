@@ -844,10 +844,10 @@ void CGPUInfo::ReloadAPI(int forceinit)
 		Init();
 	}
 	else {
-		if (!m_hGPUdll)
+		if (m_hGPUdll != NULL)
 		{
 			//TRACE0("Œﬁ∑®º”‘ÿ" + dllpth + "\n");
-			LOG("m_hGPUdll isNULL and reload Init");
+			LOG("m_hGPUdll isNotNULL Free and then reload Init");
 			m_pfnCloseGPU_API();
 			FreeLibrary(m_hGPUdll);
 			m_hGPUdll = NULL;
@@ -889,9 +889,9 @@ void CGPUInfo::ReloadAPI(int forceinit)
 
 BOOL CGPUInfo::Update()
 {
-	if (!m_hGPUdll)
-		LOG("m_hGPUdll isNULL,Need Reload");
-		return FALSE;
+	//if (m_hGPUdll == NULL)
+	//	LOG("m_hGPUdll isNULL,Need Reload");
+	//	return FALSE;
 	if (!m_pfnCheck_GPU_VRAM_Clock())
 		return FALSE;
 	m_pfnSet_GPU_Number(0);
@@ -1648,10 +1648,12 @@ void CCore::Work()
 					else 
 					{
 
-						LOG("NvApiGet check frequencyDeltaKHz_t");
+						LOG("NvApiGet frequencyDeltaKHz = 0,Pls check err,Then Chk m_start_overclock 0 To 1 ");
 						LOG( resultLog = frequencyDeltaKHz_t[0] / 500);
 						if (m_start_overclock == 0)
 							m_start_overclock = 1;
+							LOG(resultLog = m_start_overclock);
+
 					}
 				}
 				else
