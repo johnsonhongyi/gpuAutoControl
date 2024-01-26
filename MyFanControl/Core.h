@@ -6,6 +6,8 @@ using namespace std;
 int GetTime(tm *pt = 0, int offset = 0);//得到当前时间，6位数时间92500,offset用于得到offset之后秒的时间
 int GetTimeInterval(int a, int b, int *p = 0);//时间差，输入两个6位数时间，如开盘时间91500，得到a-b，并转化为6位数时间，指针p接受以秒计的时间差
 CString GetExePath();//获得exe当前运行路径
+BOOL FileExists(CString fileName); //filepath
+
 
 
 struct ECData
@@ -195,7 +197,6 @@ public:
 
 public:
 	BOOL Init();
-	//BOOL FileExists(CString fileName);
 	void Uninit();
 	void Run();//内核主循环
 	void Work();//更新温度、负载，计算负载并进行设置

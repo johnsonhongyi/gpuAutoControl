@@ -6,7 +6,6 @@
 #include <iostream>
 
 
-
 int TEMP_LIST[10] = { 90, 85, 80, 75, 70, 65, 60, 55, 50, 45 };
 
 
@@ -57,6 +56,18 @@ CString GetExePath(){
 	return fname;
 }
 
+BOOL FileExists(CString fileName)
+{
+	DWORD fileAttr;
+	if (strlen(fileName) > 1)
+	{
+		fileAttr = GetFileAttributes(fileName);
+		if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
+			return false;
+		return true;
+	}
+	return false;
+}
 
 CGPUInfo::CGPUInfo()
 {
@@ -657,6 +668,8 @@ BOOL CGPUInfo::Init()
 
 	CString dirPath = GetExePath();
 	CString logPath = dirPath + "\\log.txt";
+
+
 	//int ch = _chdir(dirPath); //change working directory
 	if (LogFileEnable)
 		//LogFile = fopen(logPath, "a");
@@ -1284,42 +1297,42 @@ BOOL CCore::Init()
 	TRACE0("内核开始初始化。\n");
 	m_nInit = -1;
 	//
-	CString dllpth = GetExePath() + "\\ClevoEcInfo.dll";
+	//CString dllpth = GetExePath() + "\\ClevoEcInfo.dll";
 
-	m_hInstDLL = LoadLibrary(dllpth);
-	if (m_hInstDLL == NULL)
-	{
-		AfxMessageBox("无法加载" + dllpth + "，请确保该文件在程序目录下，并且已安装NTPortDrv。");
-		return FALSE;
-	}
+	//m_hInstDLL = LoadLibrary(dllpth);
+	//if (m_hInstDLL == NULL)
+	//{
+	//	AfxMessageBox("无法加载" + dllpth + "，请确保该文件在程序目录下，并且已安装NTPortDrv。");
+	//	return FALSE;
+	//}
 
-	m_pfnInitIo = (InitIo *)::GetProcAddress(m_hInstDLL, "InitIo");
-	m_pfnSetFanDuty = (::SetFanDuty *)::GetProcAddress(m_hInstDLL, "SetFanDuty");
-	m_pfnSetFANDutyAuto = (SetFANDutyAuto *)::GetProcAddress(m_hInstDLL, "SetFanDutyAuto");
-	m_pfnGetTempFanDuty = (GetTempFanDuty *)::GetProcAddress(m_hInstDLL, "GetTempFanDuty");
-	m_pfnGetFANCounter = (GetFANCounter *)::GetProcAddress(m_hInstDLL, "GetFanCount");
+	//m_pfnInitIo = (InitIo *)::GetProcAddress(m_hInstDLL, "InitIo");
+	//m_pfnSetFanDuty = (::SetFanDuty *)::GetProcAddress(m_hInstDLL, "SetFanDuty");
+	//m_pfnSetFANDutyAuto = (SetFANDutyAuto *)::GetProcAddress(m_hInstDLL, "SetFanDutyAuto");
+	//m_pfnGetTempFanDuty = (GetTempFanDuty *)::GetProcAddress(m_hInstDLL, "GetTempFanDuty");
+	//m_pfnGetFANCounter = (GetFANCounter *)::GetProcAddress(m_hInstDLL, "GetFanCount");
 
-	m_pfnGetECVersion = (GetECVersion *)::GetProcAddress(m_hInstDLL, "GetECVersion");
-	m_pfnGetFANRPM[0] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetCpuFanRpm");
-	m_pfnGetFANRPM[1] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetGpuFanRpm");
-	//m_pfnGetFANRPM[2] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetGpu1FanRpm");
-	//m_pfnGetFANRPM[3] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetX72FanRpm");
+	//m_pfnGetECVersion = (GetECVersion *)::GetProcAddress(m_hInstDLL, "GetECVersion");
+	//m_pfnGetFANRPM[0] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetCpuFanRpm");
+	//m_pfnGetFANRPM[1] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetGpuFanRpm");
+	////m_pfnGetFANRPM[2] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetGpu1FanRpm");
+	////m_pfnGetFANRPM[3] = (GetFanRpm *)::GetProcAddress(m_hInstDLL, "GetX72FanRpm");
 
-	if (m_pfnInitIo == NULL)
-	{
-		FreeLibrary(m_hInstDLL);
-		m_hInstDLL = NULL;
-		AfxMessageBox("错误的ClevoEcInfo.dll");
-		return FALSE;
-	}
+	//if (m_pfnInitIo == NULL)
+	//{
+	//	FreeLibrary(m_hInstDLL);
+	//	m_hInstDLL = NULL;
+	//	AfxMessageBox("错误的ClevoEcInfo.dll");
+	//	return FALSE;
+	//}
 
-	if (m_pfnInitIo() != 1)
-	{
-		FreeLibrary(m_hInstDLL);
-		m_hInstDLL = NULL;
-		AfxMessageBox("接口初始化返回值错误！");
-		return FALSE;
-	}
+	//if (m_pfnInitIo() != 1)
+	//{
+	//	FreeLibrary(m_hInstDLL);
+	//	m_hInstDLL = NULL;
+	//	AfxMessageBox("接口初始化返回值错误！");
+	//	return FALSE;
+	//}
 
 	/*
 	int aa = 0, bb = 0;
@@ -1339,23 +1352,16 @@ BOOL CCore::Init()
 	return TRUE;
 }
 
-//bool FileExists(CString fileName)
-//{
-//	DWORD       fileAttr;
-//	fileAttr = GetFileAttributes(fileName);
-//	if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
-//		return false;
-//	return true;
-//}
+
 
 void CCore::Uninit()
 {
 	ResetFan();
-	if (m_hInstDLL != NULL)
-	{
-		FreeLibrary(m_hInstDLL);
-		m_hInstDLL = NULL;
-	}
+	//if (m_hInstDLL != NULL)
+	//{
+	//	FreeLibrary(m_hInstDLL);
+	//	m_hInstDLL = NULL;
+	//}
 	m_nInit = 0;
 }
 void CCore::Run() 
@@ -1363,8 +1369,25 @@ void CCore::Run()
 	static int nNextChecktTime = 0;
 	static BOOL bSetPriority = FALSE;
 	m_config.LoadConfig();
+	CString cmdpath;
+	CString runcmdpath;
+	int runcmdshow = SW_SHOWMINIMIZED;
 	//m_nInit = 2;
 	//Sleep(3000);
+	CString dirPath = GetExePath();
+	CString inipath = dirPath + "\\MyFanconfig.ini";
+	if (FileExists(inipath))
+	{
+		char returnValue[100];
+		//char returnValue[1024] = { 0 }
+		GetPrivateProfileString("cmdshell", "filepath", 0, returnValue, 100, inipath);
+		cmdpath = returnValue;
+		GetPrivateProfileString("cmdshell", "runcmd", 0, returnValue, 100, inipath);
+		CString runcmd = returnValue;
+		runcmdpath = runcmd +" "+ cmdpath;
+		GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
+		runcmdshow = atoi(returnValue);
+	}
 
 	if (m_config.TakeOver == 1)
 	{
@@ -1392,23 +1415,35 @@ void CCore::Run()
 				//MessageBox(NULL , "工作中...", "MyFunColtrol" , 0);
 				if (m_ApmPowerStatusChange == 1)
 				{
-					CString cmdpath = "C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py";
-					CString runcmdpath = "cmd /c python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py";
-					//bool ret = FileExists(cmdpath);
-					DWORD fileAttr = GetFileAttributes(cmdpath);
-					if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
+
+					if (!FileExists(cmdpath))
 					{
-						LOG("runApmPowerStatusChange is not exists cmdpath");
+						LOG("runApmPowerStatusChange is not exists filepath");
 					}
 					else {
 						//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
-						int result = WinExec(runcmdpath, SW_SHOWMINIMIZED);
+						int result = WinExec(runcmdpath, runcmdshow);
 						// don't show cmd
 						//int result = WinExec((runcmdpath),1);
 						int resultLog = -1;
 						LOG("runApmPowerStatusChange");
 						LOG(resultLog = result);
 					}
+
+					//DWORD fileAttr = GetFileAttributes(cmdpath);
+					//if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
+					//{
+					//	LOG("runApmPowerStatusChange is not exists cmdpath");
+					//}
+					//else {
+					//	//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
+					//	int result = WinExec(runcmdpath, SW_SHOWMINIMIZED);
+					//	// don't show cmd
+					//	//int result = WinExec((runcmdpath),1);
+					//	int resultLog = -1;
+					//	LOG("runApmPowerStatusChange");
+					//	LOG(resultLog = result);
+					//}
 					m_ApmPowerStatusChange = 0;
 				}
 
