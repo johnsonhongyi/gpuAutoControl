@@ -186,6 +186,8 @@ public:
 	int m_nCurRPM[2];//当前转速
 	BOOL m_bUpdateRPM;//是否更新转速，如果为0，只更新风扇温度和负载
 	int m_nLastUpdateTime;//最后更新时间
+	int m_TakeOverTimeOut;//动态锁定超时时间
+	int m_ApmPowerStatusChange; //电池状态改变
 	BOOL m_bForcedCooling;//强制冷却
 	BOOL m_bTakeOverStatus;//接管控制状态，描述最后一次调用的是m_pfnSetFanDuty（TRUE）还是m_pfnSetFANDutyAuto（FALSE）
 	BOOL m_bForcedRefresh;//立即刷新
@@ -193,6 +195,7 @@ public:
 
 public:
 	BOOL Init();
+	//BOOL FileExists(CString fileName);
 	void Uninit();
 	void Run();//内核主循环
 	void Work();//更新温度、负载，计算负载并进行设置

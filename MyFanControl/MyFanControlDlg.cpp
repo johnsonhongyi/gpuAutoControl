@@ -615,6 +615,8 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 	if (to ^ m_core.m_config.TakeOver)
 	{
 		m_ctlTakeOver.SetCheck(m_core.m_config.TakeOver);
+		m_core.m_TakeOverTimeOut = 0;
+		//m_core.m_config.LoadConfig();
 	}
 	//线性控制
 	//int lc = m_ctlLinear.GetCheck();
@@ -822,7 +824,14 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 			}
 		}
+		else if (m_TakeOver_LockGPUFrequency_Staus == 1)
+		{
+			if (m_core.m_GpuInfo.m_nGPU_Util > 35 && m_core.m_GpuInfo.m_nGraphicsClock > m_core.m_config.GPUFrequency)
+			{
+				m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+			}
 
+		}
 		if (!m_core.m_config.LockGPUFrequency)
 			//重置GPUFrequency
 		{
@@ -997,7 +1006,11 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	switch (wParam) {
 	case PBT_APMPOWERSTATUSCHANGE:
 		TRACE0("PBT_APMPOWERSTATUSCHANGE  received\n");
-		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  received\n");	
+		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  battery\n");	
+		if (m_core.m_ApmPowerStatusChange == 0)
+		{
+			m_core.m_ApmPowerStatusChange = 1;
+		}
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
 		if (m_core.m_start_overclock == 1)

@@ -3,6 +3,9 @@
 
 #include <Windows.h>
 #include <direct.h>
+#include <iostream>
+
+
 
 int TEMP_LIST[10] = { 90, 85, 80, 75, 70, 65, 60, 55, 50, 45 };
 
@@ -1245,6 +1248,8 @@ CCore::CCore()
 	m_nExit = 0;
 	m_start_overclock = 0;
 	m_hInstDLL = NULL;
+	m_ApmPowerStatusChange = 0;
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_nCurTemp[i]=0;//当前温度
@@ -1256,6 +1261,7 @@ CCore::CCore()
 	}
 	m_bUpdateRPM=0;//是否更新转速，如果为0，只更新风扇温度和负载
 	m_nLastUpdateTime = GetTime(0, -5);
+	m_TakeOverTimeOut = 1;
 	m_bForcedCooling = FALSE;
 	m_bTakeOverStatus = FALSE;
 	m_bForcedRefresh = FALSE;
@@ -1332,6 +1338,16 @@ BOOL CCore::Init()
 	m_nInit = 1;
 	return TRUE;
 }
+
+//bool FileExists(CString fileName)
+//{
+//	DWORD       fileAttr;
+//	fileAttr = GetFileAttributes(fileName);
+//	if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
+//		return false;
+//	return true;
+//}
+
 void CCore::Uninit()
 {
 	ResetFan();
@@ -1342,13 +1358,19 @@ void CCore::Uninit()
 	}
 	m_nInit = 0;
 }
-void CCore::Run()
+void CCore::Run() 
 {
 	static int nNextChecktTime = 0;
 	static BOOL bSetPriority = FALSE;
 	m_config.LoadConfig();
 	//m_nInit = 2;
 	//Sleep(3000);
+
+	if (m_config.TakeOver == 1)
+	{
+		m_TakeOverTimeOut = 0;
+	}
+
 	if (!m_nInit)
 	{
 		Init();
@@ -1368,6 +1390,28 @@ void CCore::Run()
 			if (curtime >= nNextChecktTime || m_bForcedRefresh)
 			{
 				//MessageBox(NULL , "工作中...", "MyFunColtrol" , 0);
+				if (m_ApmPowerStatusChange == 1)
+				{
+					CString cmdpath = "C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py";
+					CString runcmdpath = "cmd /c python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py";
+					//bool ret = FileExists(cmdpath);
+					DWORD fileAttr = GetFileAttributes(cmdpath);
+					if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
+					{
+						LOG("runApmPowerStatusChange is not exists cmdpath");
+					}
+					else {
+						//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
+						int result = WinExec(runcmdpath, SW_SHOWMINIMIZED);
+						// don't show cmd
+						//int result = WinExec((runcmdpath),1);
+						int resultLog = -1;
+						LOG("runApmPowerStatusChange");
+						LOG(resultLog = result);
+					}
+					m_ApmPowerStatusChange = 0;
+				}
+
 				Work();
 				m_nLastUpdateTime = curtime;//更新时间
 				nNextChecktTime = GetTime(NULL, m_config.UpdateInterval);//下一个更新时间
@@ -1422,16 +1466,19 @@ void CCore::Work()
 	int limit_overclock = 350;
 	int resultLog = -1;
 	//m_core.m_config.Linear 线性控制
+	int count_time = limitTime * m_config.UpdateInterval; //使用周期*时间统计
 	if (m_config.TakeOver)
 	{
+		if (m_TakeOverTimeOut == 0)
+			m_TakeOverTimeOut = GetTime(NULL, count_time * 2);//下一个超时
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
 		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
 		{
 			//占用率<88
 			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
 			m_config.TakeOverDown += 1;
-			//int count_time = m_config.TakeOverDown * m_config.UpdateInterval; //使用周期*时间统计
-			if (m_config.TakeOverDown >= limitTime)
+			int takeOvercurtime = GetTime();
+			if (m_config.TakeOverDown >= limitTime || (takeOvercurtime > m_TakeOverTimeOut && m_config.TakeOverUp == 0 && m_config.TakeOverDown >= int(limitTime/2)) )
 			{
 				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //降频为占用率上限
 				limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);  //降频0.95
@@ -1444,6 +1491,7 @@ void CCore::Work()
 				m_config.TakeOverDown = 0;
 				m_config.TakeOverUp = 0;
 				m_config.TakeOverLock = 0;
+				m_TakeOverTimeOut = 0 ;
 			}
 		}
 		else
@@ -1468,6 +1516,7 @@ void CCore::Work()
 				m_config.TakeOverUp = 0;
 				m_config.TakeOverDown = 0;
 				m_config.TakeOverLock = 0;
+				m_TakeOverTimeOut = 0;
 			}
 			else
 			{
@@ -1484,12 +1533,14 @@ void CCore::Work()
 
 
 						//limitClock = m_GpuInfo.m_nGraphicsClock //动态超频
-						if (m_config.TakeOverUp >= limitTime)
+						int takeOvercurtime = GetTime();
+						if (m_config.TakeOverUp >= limitTime || (takeOvercurtime > m_TakeOverTimeOut &&  m_config.TakeOverDown==0 && m_config.TakeOverUp >= int(limitTime / 2)) )
 						{
 							if (m_GpuInfo.m_nGPU_Util >= m_config.downClockPercent && m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit - 10)  //占用率大于70 切当前温度小于升频温度-10度 
 							{
-								//limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.18);
-								limitClock = m_config.GPU_LockClock;				//default LockClock
+								limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.10);
+								//limitClock = 0;
+								//limitClock = m_config.GPU_LockClock;				//default LockClock bug 630 set 0
 							}
 
 							else if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //判断当前温度小于升频温度75度 
@@ -1513,7 +1564,7 @@ void CCore::Work()
 							limitClock = ((limitClock + 5) / 10) * 10;
 
 							//if (limitClock >= baseClockLimit && limitClock < m_config.upClocklimit)
-							if (limitClock >= lowClockLimit && limitClock < m_config.upClocklimit)
+							if (limitClock == 0 || (limitClock >= lowClockLimit && limitClock < m_config.upClocklimit))
 
 							{
 								m_config.GPUFrequency = limitClock;
@@ -1531,6 +1582,7 @@ void CCore::Work()
 							m_config.TakeOverUp = 0;
 							m_config.TakeOverDown = 0;
 							m_config.TakeOverLock = 0;
+							m_TakeOverTimeOut = 0;
 						}
 					}
 					else
@@ -1561,18 +1613,14 @@ void CCore::Work()
 	
 	//if ((m_config.GPUOverClock > 0 || m_config.GPUOverClock < limit_overclock) && (m_GpuInfo.m_nGPU_Util > 0 || m_start_overclock == 0))
 	//if ((m_config.GPUOverClock >= 0 || m_config.GPUOverClock < limit_overclock) && (m_start_overclock == 0))
-	if (m_start_overclock == 0)
-	{
-		//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
-		LOG(resultLog = m_config.GPUOverClock);
-	}
+
 	if ((m_config.GPUOverClock >= 0 && m_config.GPUOverClock < limit_overclock))
 	{
 		if (m_start_overclock == 0)
 		{
 			//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
 			//LOG(resultLog = m_config.GPUOverClock);
-			Sleep(2000);
+			Sleep(1000);
 			if (NvApiGpuHandles[gpuBusId] != 0)
 			{
 				LOG("Check NvApiGpuHandles[%d] : %d ", busId, NvApiGpuHandles[gpuBusId]);
@@ -1623,8 +1671,6 @@ void CCore::Work()
 					else if (frequencyDeltaKHz_t[0] > 0)
 					{
 						int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
-						LOG(resultLog = freq_over_clock);
-						LOG(resultLog = m_config.GPUOverClock);
 						if (freq_over_clock != m_config.GPUOverClock)
 						{
 							m_GpuInfo.ForcedRefreshGPU = 1;
@@ -1636,13 +1682,32 @@ void CCore::Work()
 							else
 								oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 							LOG(resultLog = freq_over_clock);
+							LOG(resultLog = m_config.GPUOverClock);
 
 						}
 						else
 						{
 							if (m_start_overclock == 0)
+							{
+								//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
+								if (m_TakeOverTimeOut == 0)
+								{
+									LOG(resultLog = m_TakeOverTimeOut);
+									m_TakeOverTimeOut = GetTime(NULL, 30);//下一个超时
+								}
+								//LOG(resultLog = freq_over_clock);
+								//LOG(resultLog = m_config.GPUOverClock);
+							}
+							int overclockcurtime = GetTime();
+							if (overclockcurtime > m_TakeOverTimeOut && m_start_overclock == 0) 
+							{
+
 								m_start_overclock = 1;
-							LOG(resultLog = m_start_overclock);
+								m_TakeOverTimeOut = 0;
+								LOG(resultLog = freq_over_clock);
+								LOG(resultLog = m_config.GPUOverClock);
+								LOG(resultLog = m_start_overclock);
+							}
 						}
 					}
 					else 
@@ -1855,10 +1920,11 @@ void CCore::ResetGPUFrequancy()
 void CCore::ResetSleepStatus()
 {
 	int resultLog = -1;
-	Sleep(8000);
 	LOG("ResetSleepStatus");
 	m_start_overclock = 0;
 	LOG(resultLog = m_start_overclock);
+	m_TakeOverTimeOut = 0;
+	Sleep(10000);
 	
 }
 
