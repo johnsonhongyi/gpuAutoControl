@@ -1389,6 +1389,17 @@ void CCore::Run()
 		runcmdshow = atoi(returnValue);
 	}
 
+	if (FileExists(cmdpath))
+	{
+		//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
+		int result = WinExec(runcmdpath, runcmdshow);
+		// don't show cmd
+		//int result = WinExec((runcmdpath),1);
+		int resultLog = -1;
+		LOG("runApmPowerStatusChangeInitCheck");
+		LOG(resultLog = result);
+	}
+
 	if (m_config.TakeOver == 1)
 	{
 		m_TakeOverTimeOut = 0;

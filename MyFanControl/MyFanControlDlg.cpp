@@ -1007,7 +1007,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	case PBT_APMPOWERSTATUSCHANGE:
 		TRACE0("PBT_APMPOWERSTATUSCHANGE  received\n");
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  battery\n");	
-		if (m_core.m_ApmPowerStatusChange == 0)
+		if (m_core.m_ApmPowerStatusChange == 0 && m_core.m_start_overclock == 0)
 		{
 			m_core.m_ApmPowerStatusChange = 1;
 		}
