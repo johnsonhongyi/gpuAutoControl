@@ -584,7 +584,12 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 		{
 			int lf = m_ctlLockGpuFrequancy.GetCheck();
 			if (lf ^ m_core.m_config.LockGPUFrequency)
+			{
+				m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
 				m_ctlLockGpuFrequancy.SetCheck(TRUE);
+			}
+				
+				
 			char str[256];
 			m_ctlFrequency.GetWindowTextA(str, 256);
 			int nFrequency = atoi(str);
@@ -615,7 +620,7 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 	if (to ^ m_core.m_config.TakeOver)
 	{
 		m_ctlTakeOver.SetCheck(m_core.m_config.TakeOver);
-		m_core.m_TakeOverTimeOut = 0;
+		//m_core.m_TakeOverTimeOut = 0;
 		//m_core.m_config.LoadConfig();
 	}
 	//线性控制
@@ -648,6 +653,7 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 	if (lf ^ m_core.m_config.LockGPUFrequency)
 	{
 		m_ctlLockGpuFrequancy.SetCheck(m_core.m_config.LockGPUFrequency);
+		//m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;   //切换Lock变更会初始值 bFull return
 	}
 
 
@@ -792,7 +798,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.UpdateInterval = nInterval;
 	m_core.m_config.TransitionTemp = nTransition; //GPU Mem频率
 	m_core.m_config.ForceTemp = nForceTemp;
-	m_core.m_config.GPUFrequency = nFrequency;
+	m_core.m_config.GPUFrequency = nFrequency;    //GPU Lock频率
 	m_core.m_config.GPUOverClock = nForceTemp;
 	m_core.m_config.GPUOverMEMClock = nTransition;
 
@@ -1007,7 +1013,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	case PBT_APMPOWERSTATUSCHANGE:
 		TRACE0("PBT_APMPOWERSTATUSCHANGE  received\n");
 		//AfxMessageBox("PBT_APMPOWERSTATUSCHANGE  battery\n");	
-		if (m_core.m_ApmPowerStatusChange == 0 && m_core.m_start_overclock == 0)
+		if (m_core.m_ApmPowerStatusChange == 0)
 		{
 			m_core.m_ApmPowerStatusChange = 1;
 		}
@@ -1025,6 +1031,10 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		if (m_core.m_start_overclock == 1)
 		{
 			//m_core.m_GpuInfo.ReloadAPI(1);
+			if (m_core.m_ApmPowerStatusChange == 0)
+			{
+				m_core.m_ApmPowerStatusChange = 1;
+			}
 			m_core.ResetSleepStatus();
 			//SetTimer(0, 100, NULL);
 		}

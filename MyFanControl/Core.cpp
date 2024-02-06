@@ -1562,7 +1562,7 @@ void CCore::Work()
 				m_config.TakeOverUp = 0;
 				m_config.TakeOverDown = 0;
 				m_config.TakeOverLock = 0;
-				m_TakeOverTimeOut = 0;
+				//m_TakeOverTimeOut = 0; //BUG m_TakeOverTimeOut always reset 0
 			}
 			else
 			{
@@ -1739,7 +1739,7 @@ void CCore::Work()
 								if (m_TakeOverTimeOut == 0)
 								{
 									LOG(resultLog = m_TakeOverTimeOut);
-									m_TakeOverTimeOut = GetTime(NULL, 30);//下一个超时
+									//m_TakeOverTimeOut = GetTime(NULL, 30);//下一个超时
 								}
 								//LOG(resultLog = freq_over_clock);
 								//LOG(resultLog = m_config.GPUOverClock);
