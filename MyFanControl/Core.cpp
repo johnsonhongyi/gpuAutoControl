@@ -56,6 +56,33 @@ CString GetExePath(){
 	return fname;
 }
 
+int GetDisplayFrequency()
+{
+	DEVMODE dm;
+	ZeroMemory(&dm, sizeof(dm));
+	dm.dmSize = sizeof(dm);
+	if (0 != EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm))
+	{
+		return dm.dmDisplayFrequency;
+	}
+	else
+		return 0;
+}
+
+int GetBatteryLevel()
+{
+	SYSTEM_POWER_STATUS status;
+	GetSystemPowerStatus(&status);
+	return status.BatteryLifePercent;
+}
+
+int GetBatteryACLineStatus()
+{
+	SYSTEM_POWER_STATUS status;
+	GetSystemPowerStatus(&status);
+	return status.ACLineStatus;
+}
+
 BOOL FileExists(CString fileName)
 {
 	DWORD fileAttr;
@@ -1376,6 +1403,9 @@ void CCore::Run()
 	//Sleep(3000);
 	CString dirPath = GetExePath();
 	CString inipath = dirPath + "\\MyFanconfig.ini";
+	//int battery_percent = GetBatteryLevel();
+	//int battery_ACLine = GetBatteryACLineStatus();
+	//int dm = GetDisplayFrequency();
 	if (FileExists(inipath))
 	{
 		char returnValue[100];
@@ -1389,7 +1419,7 @@ void CCore::Run()
 		runcmdshow = atoi(returnValue);
 	}
 
-	if (FileExists(cmdpath))
+	if (FileExists(cmdpath) && GetBatteryACLineStatus() == 0 && GetBatteryLevel() < 100)
 	{
 		//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
 		int result = WinExec(runcmdpath, runcmdshow);
