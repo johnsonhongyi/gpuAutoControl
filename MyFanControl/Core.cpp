@@ -1541,6 +1541,7 @@ void CCore::Work()
 	float downClockRatio = 0.97;
 	int limit_overclock = 350;
 	int resultLog = -1;
+	int baseMemClock = 6000;
 	//m_core.m_config.Linear 线性控制
 	int count_time = limitTime * m_config.UpdateInterval; //使用周期*时间统计
 	if (m_config.TakeOver)
@@ -1692,6 +1693,7 @@ void CCore::Work()
 
 	if ((m_config.GPUOverClock >= 0 && m_config.GPUOverClock < limit_overclock))
 	{
+	
 		if (m_start_overclock == 0)
 		{
 			//m_GpuInfo.m_nOverClock = m_config.GPUOverClock;
@@ -1704,6 +1706,7 @@ void CCore::Work()
 				int frequencyDeltaKHz_t[255] = { 0 };
 				int count_t = -1;
 				int ret = -1;
+				int overmemclock = baseMemClock + m_config.GPUOverMEMClock;
 				BOOL oc_ret = 1;
 				if (m_GpuInfo.nv_Api_init == 1)
 					ret = NvApiGetCurve(gpuBusId, (unsigned int*)&count_t, voltageUV_t, frequencyDeltaKHz_t, 1);
@@ -1720,7 +1723,7 @@ void CCore::Work()
 						m_GpuInfo.nv_Api_init = 1;
 						LOG(resultLog = freq_over_clock);
 						LOG(resultLog = freq_over_clock_limit);
-						if (freq_over_clock == freq_over_clock_limit || (freq_over_clock_limit > m_config.OverClock2) || ((freq_over_clock > m_config.OverClock2) && (freq_over_clock_limit < m_config.OverClock2)))
+						if (freq_over_clock == freq_over_clock_limit || (m_GpuInfo.m_nMemoryClock > 5000 && m_GpuInfo.m_nMemoryClock != overmemclock && m_GpuInfo.m_nMemoryClock != overmemclock+1)  || (freq_over_clock_limit > m_config.OverClock2) || ((freq_over_clock > m_config.OverClock2) && (freq_over_clock_limit < m_config.OverClock2)))
 						{
 							m_GpuInfo.ForcedRefreshGPU = 1;
 							LOG(resultLog = frequencyDeltaKHz_t[0] / 500);
@@ -1731,7 +1734,7 @@ void CCore::Work()
 							else
 								m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 							LOG(resultLog = m_config.GPUOverClock);
-
+							m_TakeOverTimeOut = 1;
 						}
 						else
 						{
@@ -1747,7 +1750,7 @@ void CCore::Work()
 					else if (frequencyDeltaKHz_t[0] > 0)
 					{
 						int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
-						if (freq_over_clock != m_config.GPUOverClock)
+						if (freq_over_clock != m_config.GPUOverClock  || (m_GpuInfo.m_nMemoryClock > 5000  && m_GpuInfo.m_nMemoryClock != overmemclock  && m_GpuInfo.m_nMemoryClock != overmemclock+1))
 						{
 							m_GpuInfo.ForcedRefreshGPU = 1;
 							LOG(frequencyDeltaKHz_t[0] / 500);
@@ -1759,7 +1762,7 @@ void CCore::Work()
 								oc_ret = m_GpuInfo.OverClockFrequency(m_config.GPUOverClock, m_config.GPUOverMEMClock, m_config.OverClock2);
 							LOG(resultLog = freq_over_clock);
 							LOG(resultLog = m_config.GPUOverClock);
-
+							m_TakeOverTimeOut = 1;
 						}
 						else
 						{
@@ -1779,7 +1782,7 @@ void CCore::Work()
 							{
 
 								m_start_overclock = 1;
-								m_TakeOverTimeOut = 0;
+								//m_TakeOverTimeOut = 0;
 								LOG(resultLog = freq_over_clock);
 								LOG(resultLog = m_config.GPUOverClock);
 								LOG(resultLog = m_start_overclock);
