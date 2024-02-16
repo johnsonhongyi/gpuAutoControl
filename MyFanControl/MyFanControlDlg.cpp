@@ -585,7 +585,9 @@ void CMyFanControlDlg::UpdateGui(BOOL bFull)
 			int lf = m_ctlLockGpuFrequancy.GetCheck();
 			if (lf ^ m_core.m_config.LockGPUFrequency)
 			{
-				m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+				//240216 check Lock bug
+				//m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+
 				m_ctlLockGpuFrequancy.SetCheck(TRUE);
 			}
 				
@@ -804,8 +806,8 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 	if (!m_core.m_config.TakeOver)
 	{
-		if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
-			m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+		//if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+		//	m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
 
 	}
 	else
@@ -838,6 +840,7 @@ BOOL CMyFanControlDlg::CheckAndSave()
 			}
 
 		}
+		
 		if (!m_core.m_config.LockGPUFrequency)
 			//重置GPUFrequency
 		{
@@ -1102,7 +1105,7 @@ void CMyFanControlDlg::OnBnClickedCheckTakeover()
 				//m_TakeOver_LockGPUFrequency_Staus = m_core.m_config.LockGPUFrequency;  // ==1
 				m_TakeOver_LockGPUFrequency_Staus = 1;   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
 
-				//m_core.m_config.LockGPUFrequency = m_core.m_config.GPU_LockClock;
+				//m_core.m_config.GPU_LockClock;
 			}
 			else
 			{

@@ -1673,7 +1673,7 @@ void CCore::Work()
 							{
 								//m_config.LockGPUFrequency = 0;  //闲置空闲低温后放开锁定
 								//m_config.GPUFrequency = 0;
-								m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock
+								m_config.GPUFrequency = m_config.GPU_LockClock;  //恢复init LockClock 0216 690MHz bug?
 								m_config.TakeOverUp = 0;
 								m_config.TakeOverDown = 0;
 								m_config.TakeOverLock = 0;
@@ -1992,6 +1992,7 @@ void CCore::ResetGPUFrequancy()
 {
 	m_GpuInfo.ForcedRefreshGPU = 1;
 	//检测曲线变化
+	m_config.GPU_LockClock = m_config.GPUFrequency;
 	m_start_overclock = 0;
 
 }
