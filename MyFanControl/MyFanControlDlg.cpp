@@ -834,7 +834,9 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		}
 		else if (m_TakeOver_LockGPUFrequency_Staus == 1)
 		{
-			if (m_core.m_GpuInfo.m_nGPU_Util > 35 && m_core.m_GpuInfo.m_nGraphicsClock > m_core.m_config.GPUFrequency)
+			//if (m_core.m_GpuInfo.m_nGPU_Util < 35 && m_core.m_GpuInfo.m_nGraphicsClock == m_core.m_config.GPUFrequency)
+			if (m_core.m_config.GPUFrequency != m_core.m_config.GPU_LockClock && m_core.m_GpuInfo.m_nGraphicsClock == m_core.m_config.GPUFrequency)
+
 			{
 				m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
 			}

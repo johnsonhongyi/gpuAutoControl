@@ -1992,7 +1992,7 @@ void CCore::ResetGPUFrequancy()
 {
 	m_GpuInfo.ForcedRefreshGPU = 1;
 	//¼ì²âÇúÏß±ä»¯
-	m_config.GPU_LockClock = m_config.GPUFrequency;
+	//m_config.GPU_LockClock = m_config.GPUFrequency;
 	m_start_overclock = 0;
 
 }
