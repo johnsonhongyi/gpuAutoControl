@@ -800,23 +800,29 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.UpdateInterval = nInterval;
 	m_core.m_config.TransitionTemp = nTransition; //GPU Mem频率
 	m_core.m_config.ForceTemp = nForceTemp;
-	m_core.m_config.GPUFrequency = nFrequency;    //GPU Lock频率
+	if (m_core.m_config.TakeOver == 0 || m_TakeOver_LockGPUFrequency_Staus == 2)
+	{
+		m_core.m_config.GPUFrequency = nFrequency;    //GPU Lock频率
+		m_core.m_config.GPU_LockClock = nFrequency;
+	}
 	m_core.m_config.GPUOverClock = nForceTemp;
 	m_core.m_config.GPUOverMEMClock = nTransition;
 
 	if (!m_core.m_config.TakeOver)
 	{
-		//if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
-		//	m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
-
+		////if (m_TakeOver_LockGPUFrequency_Staus == 1 || m_TakeOver_LockGPUFrequency_Staus == 2)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+		//if (m_TakeOver_LockGPUFrequency_Staus == 1 && m_core.m_GpuInfo.m_nGPU_Util < 35 && m_core.m_config.GPUFrequency < 600 && m_core.m_config.GPU_LockClock > m_core.m_config.GPUFrequency)   // 已开启后标记为 0 未锁定, 1 锁定, 2 未初始化
+		//{
+		//	m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;  //TakeOver Limit Clock
+		//}
 	}
 	else
 	{
 		//动态调整开启后
 		if (m_TakeOver_LockGPUFrequency_Staus == 2)
 		{
-			m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
-			//m_TakeOver_LockGPUFrequency_Staus = 1;   //Status  0 未锁定,1 锁定 ,2 未初始化
+			//m_core.m_config.GPU_LockClock = nFrequency;  //TakeOver Limit Clock
+			m_TakeOver_LockGPUFrequency_Staus = 1;   //Status  0 未锁定,1 锁定 ,2 未初始化
 			if (m_core.m_config.LockGPUFrequency)
 				//锁定标记
 			{
@@ -832,16 +838,14 @@ BOOL CMyFanControlDlg::CheckAndSave()
 
 			}
 		}
-		else if (m_TakeOver_LockGPUFrequency_Staus == 1)
-		{
-			//if (m_core.m_GpuInfo.m_nGPU_Util < 35 && m_core.m_GpuInfo.m_nGraphicsClock == m_core.m_config.GPUFrequency)
-			if (m_core.m_config.GPUFrequency != m_core.m_config.GPU_LockClock && m_core.m_GpuInfo.m_nGraphicsClock == m_core.m_config.GPUFrequency)
-
-			{
-				m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
-			}
-
-		}
+		//else if (m_TakeOver_LockGPUFrequency_Staus == 1)
+		//{
+		//	//if (m_core.m_GpuInfo.m_nGPU_Util < 35 && m_core.m_GpuInfo.m_nGraphicsClock == m_core.m_config.GPUFrequency)
+		//	if (m_core.m_GpuInfo.m_nGPU_Util < 35 && m_core.m_config.GPUFrequency < 600  && m_core.m_config.GPU_LockClock > m_core.m_config.GPUFrequency)
+		//	{
+		//		m_core.m_config.GPUFrequency = m_core.m_config.GPU_LockClock;
+		//	}
+		//}
 		
 		if (!m_core.m_config.LockGPUFrequency)
 			//重置GPUFrequency
