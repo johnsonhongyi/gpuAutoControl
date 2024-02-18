@@ -1306,6 +1306,7 @@ CCore::CCore()
 	m_bTakeOverStatus = FALSE;
 	m_bForcedRefresh = FALSE;
 	//m_nGPU_LockClock = 0;
+	
 }
 CCore::~CCore()
 {
@@ -1542,14 +1543,16 @@ void CCore::Work()
 	int limit_overclock = 350;
 	int resultLog = -1;
 	int baseMemClock = 6000;
+	int nGPU_Util_limit = 55;
 	//m_core.m_config.Linear 线性控制
 	int count_time = limitTime * m_config.UpdateInterval; //使用周期*时间统计
+
 	if (m_config.TakeOver)
 	{
 		if (m_TakeOverTimeOut == 0)
 			m_TakeOverTimeOut = GetTime(NULL, count_time * 2);//下一个超时
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-		if (m_GpuInfo.m_nGPU_Util > 35 && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
+		if (m_GpuInfo.m_nGPU_Util > nGPU_Util_limit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
 		{
 			//占用率<88
 			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
@@ -1664,7 +1667,7 @@ void CCore::Work()
 					}
 					else
 					{
-						if (m_GpuInfo.m_nGPU_Util < 35 && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
+						if (m_GpuInfo.m_nGPU_Util < nGPU_Util_limit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
 							//锁定情况 Util <35 and 温度小于限温 放开锁定 
 						{
 							m_config.TakeOverLock += 1;
@@ -1822,10 +1825,14 @@ void CCore::Work()
 	{
 		if (m_config.LockGPUFrequency)
 		{
-			if (m_config.TakeOver)
-				m_GpuInfo.LockFrequency(m_config.GPUFrequency);
-			else
-				m_GpuInfo.LockFrequency(m_config.GPU_LockClock);
+			if (m_config.GPUFrequency != m_config.GPU_LockClock)
+			{
+				if (m_config.TakeOver)
+					m_GpuInfo.LockFrequency(m_config.GPUFrequency);
+				else
+					m_GpuInfo.LockFrequency(m_config.GPU_LockClock);
+			}
+
 		}
 		else
 			m_GpuInfo.LockFrequency(0);

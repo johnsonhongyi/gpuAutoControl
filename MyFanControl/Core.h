@@ -195,6 +195,20 @@ public:
 	BOOL m_bForcedRefresh;//立即刷新
 	//int m_nGPU_LockClock; //初始化锁定频率
 
+	//int limitClock;
+	//int limitTime;
+	////int baseClockLimit = m_GpuInfo.m_nBaseClock;
+	//int baseClockLimit;
+	//int lowClockLimit;  //Lock 800 m_nGraphicsClock ==795
+	//float upClockRatio;
+	//float downClockRatio ;
+	//int limit_overclock;
+	//int resultLog ;
+	//int baseMemClock ;
+	//int nGPU_Util_limit ;
+	////m_core.m_config.Linear 线性控制
+	//int count_time ; //使用周期*时间统计
+
 public:
 	BOOL Init();
 	void Uninit();
