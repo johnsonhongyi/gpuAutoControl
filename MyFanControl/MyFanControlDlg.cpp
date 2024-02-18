@@ -877,12 +877,7 @@ void CMyFanControlDlg::OnBnClickedButtonSave()
 
 void CMyFanControlDlg::OnBnClickedButtonReset()
 {
-	// TODO:  在此添加控件通知处理程序代码
-	m_core.m_config.LoadDefault();
-	m_core.m_GpuInfo.ReloadAPI();
-	m_core.ResetGPUFrequancy();
-
-	if (m_hCoreThread != NULL) 
+	if (m_hCoreThread != NULL)
 	{
 		TerminateThread(m_hCoreThread, -1);//强制结束进程
 		CloseHandle(m_hCoreThread);
@@ -897,7 +892,14 @@ void CMyFanControlDlg::OnBnClickedButtonReset()
 		m_hCoreThread = CreateThread(NULL, NULL, CoreThread, this, NULL, &dwThreadID);
 		m_core.m_bForcedRefresh = TRUE;
 	}
-	//SetTimer(0, 100, NULL);
+	SetTimer(0, 100, NULL);
+
+	// TODO:  在此添加控件通知处理程序代码
+	m_core.m_GpuInfo.ReloadAPI();
+	m_core.m_config.LoadDefault();
+	m_core.ResetGPUFrequancy();
+
+	
 
 	UpdateGui(TRUE);
 }

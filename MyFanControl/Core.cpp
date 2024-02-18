@@ -700,7 +700,7 @@ BOOL CGPUInfo::Init()
 	//int ch = _chdir(dirPath); //change working directory
 	if (LogFileEnable)
 		//LogFile = fopen(logPath, "a");
-		LogFile = fopen(logPath, "w");
+		LogFile = fopen(logPath, "a");
 
 	nv_Api_init = 0; //初始化check 128
 	if (NvApi)
@@ -891,16 +891,15 @@ void CGPUInfo::ReloadAPI(int forceinit)
 		{
 			//TRACE0("无法加载" + dllpth + "\n");
 			LOG("m_hGPUdll isNotNULL Free and then reload Init");
+			nv_Api_init = 0;
 			m_pfnCloseGPU_API();
 			FreeLibrary(m_hGPUdll);
 			m_hGPUdll = NULL;
 			if (NvApi)
 				NvApiFree();
 			//FreeLibrary(nvapi);
-
 			if (LogFile)
 				fclose(LogFile);
-
 			Init();
 		}
 		else{
@@ -924,7 +923,6 @@ void CGPUInfo::ReloadAPI(int forceinit)
 			else {
 				LOG("m_hGPUdll and GPU_API Not NULL, no reload");
 			}
-
 		}
 	}
 	//return m_Gpu;
@@ -935,13 +933,20 @@ BOOL CGPUInfo::Update()
 	//if (m_hGPUdll == NULL)
 	//	LOG("m_hGPUdll isNULL,Need Reload");
 	//	return FALSE;
-	if (!m_pfnCheck_GPU_VRAM_Clock())
-		return FALSE;
-	m_pfnSet_GPU_Number(0);
-	m_nGPU_Temp = m_pfnGet_GPU_Temp();
-	m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
-	m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
-	m_nGPU_Util = m_pfnGet_GPU_Util();
+	if (nv_Api_init == 1)
+	{
+		if (!m_pfnCheck_GPU_VRAM_Clock())
+			return FALSE;
+		m_pfnSet_GPU_Number(0);
+		m_nGPU_Temp = m_pfnGet_GPU_Temp();
+		m_nGraphicsClock = m_pfnGet_GPU_Graphics_Clock();
+		m_nMemoryClock = m_pfnGet_GPU_Memory_Clock();
+		m_nGPU_Util = m_pfnGet_GPU_Util();
+	}
+	else
+		{
+			return FALSE;
+		}
 	return TRUE;
 }
 BOOL CGPUInfo::LockFrequency(int frequency)
@@ -1182,14 +1187,44 @@ void CConfig::LoadDefault()
 	//int downClockPercent;//占用率降频阈值
 	//int downTemplimit;//温控降频阈值
 	//int upTemplimit;//温控升频阈值
-	upClockPercent = 93;//占用率升频阈值
-	downClockPercent = 80;//占用率降频阈值
-	downTemplimit = 82;//温控降频阈值
-	upTemplimit = 79;//温控升频阈值
-	upClocklimit = 1600; //升频上限
-	timelimit = 3;    //统计时长
-	CurveUV_limit = 780; //Curve保护
-	OverClock2 = 145; //Curve保护145Mhz
+	CString dirPath = GetExePath();
+	CString inipath = dirPath + "\\MyFanconfig.ini";
+	//int battery_percent = GetBatteryLevel();
+	//int battery_ACLine = GetBatteryACLineStatus();
+	//int dm = GetDisplayFrequency();
+	if (FileExists(inipath))
+	{
+		char returnValue[100];
+		//char returnValue[1024] = { 0 }
+		GetPrivateProfileString("LoadDefault", "upClockPercent", 0, returnValue, 100, inipath);
+		upClockPercent = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "downClockPercent", 0, returnValue, 100, inipath);
+		downClockPercent = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "downTemplimit", 0, returnValue, 100, inipath);
+		downTemplimit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "upTemplimit", 0, returnValue, 100, inipath);
+		upTemplimit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "upClocklimit", 0, returnValue, 100, inipath);
+		upClocklimit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "timelimit", 0, returnValue, 100, inipath);
+		timelimit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "CurveUV_limit", 0, returnValue, 100, inipath);
+		CurveUV_limit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "OverClock2", 0, returnValue, 100, inipath);
+		OverClock2 = atoi(returnValue);
+
+	}
+	else
+	{
+		upClockPercent = 94;//占用率升频阈值
+		downClockPercent = 88;//占用率降频阈值
+		downTemplimit = 80;//温控降频阈值
+		upTemplimit = 79;//温控升频阈值
+		upClocklimit = 1600; //升频上限
+		timelimit = 3;    //统计时长
+		CurveUV_limit = 680; //Curve保护
+		OverClock2 = 145; //Curve保护145Mhz
+	}
 
 	int i = 0;
 	DutyList[0][i++] = upClockPercent;//90+  //占用率升频阈值
@@ -1418,6 +1453,7 @@ void CCore::Run()
 		runcmdpath = runcmd +" "+ cmdpath;
 		GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
 		runcmdshow = atoi(returnValue);
+
 	}
 
 	if (FileExists(cmdpath) && GetBatteryACLineStatus() == 0 && GetBatteryLevel() < 100)
@@ -1531,7 +1567,11 @@ void CCore::Work()
 	//}
 	//else
 	//	ResetFan();
-	m_GpuInfo.Update();
+	if (m_GpuInfo.nv_Api_init == 1)
+		m_GpuInfo.Update();
+	else
+		Sleep(500);
+
 	//锁定GPU频率
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
@@ -1752,6 +1792,10 @@ void CCore::Work()
 					}
 					else if (frequencyDeltaKHz_t[0] > 0)
 					{
+						if (m_GpuInfo.nv_Api_init == 0)
+						{
+							m_GpuInfo.nv_Api_init = 1;
+						}
 						int freq_over_clock = frequencyDeltaKHz_t[0] / 500;
 						if (freq_over_clock != m_config.GPUOverClock  || (m_GpuInfo.m_nMemoryClock > 5000  && m_GpuInfo.m_nMemoryClock != overmemclock  && m_GpuInfo.m_nMemoryClock != overmemclock+1))
 						{
@@ -1825,7 +1869,7 @@ void CCore::Work()
 	{
 		if (m_config.LockGPUFrequency)
 		{
-			if (m_config.GPUFrequency != m_config.GPU_LockClock)
+			if (m_GpuInfo.m_nGraphicsClock != m_config.GPU_LockClock)
 			{
 				if (m_config.TakeOver)
 					m_GpuInfo.LockFrequency(m_config.GPUFrequency);
