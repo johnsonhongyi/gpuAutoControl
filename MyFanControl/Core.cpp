@@ -700,7 +700,7 @@ BOOL CGPUInfo::Init()
 	//int ch = _chdir(dirPath); //change working directory
 	if (LogFileEnable)
 		//LogFile = fopen(logPath, "a");
-		LogFile = fopen(logPath, "a");
+		LogFile = fopen(logPath, "w");
 
 	nv_Api_init = 0; //初始化check 128
 	if (NvApi)
@@ -1208,6 +1208,8 @@ void CConfig::LoadDefault()
 		upClocklimit = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "timelimit", 0, returnValue, 100, inipath);
 		timelimit = atoi(returnValue);
+		GetPrivateProfileString("LoadDefault", "UpdateInterval", 0, returnValue, 100, inipath);
+		UpdateInterval = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "CurveUV_limit", 0, returnValue, 100, inipath);
 		CurveUV_limit = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "OverClock2", 0, returnValue, 100, inipath);
@@ -1222,8 +1224,9 @@ void CConfig::LoadDefault()
 		upTemplimit = 79;//温控升频阈值
 		upClocklimit = 1600; //升频上限
 		timelimit = 3;    //统计时长
-		CurveUV_limit = 680; //Curve保护
+		CurveUV_limit = 690; //Curve保护
 		OverClock2 = 145; //Curve保护145Mhz
+		UpdateInterval = 2;
 	}
 
 	int i = 0;
@@ -1245,7 +1248,7 @@ void CConfig::LoadDefault()
 
 
 	TransitionTemp = 0;
-	UpdateInterval = 2;
+	//UpdateInterval = 2;
 	Linear = FALSE;
 	TakeOver = FALSE;
 	ForceTemp = 50;
