@@ -1443,8 +1443,7 @@ void CCore::Run()
 	CString dirPath = GetExePath();
 	CString inipath = dirPath + "\\MyFanconfig.ini";
 	//int battery_percent = GetBatteryLevel();
-	//int battery_ACLine = GetBatteryACLineStatus();
-	//int dm = GetDisplayFrequency();
+
 	if (FileExists(inipath))
 	{
 		char returnValue[100];
@@ -1458,8 +1457,10 @@ void CCore::Run()
 		runcmdshow = atoi(returnValue);
 
 	}
-
-	if (FileExists(cmdpath) && GetBatteryACLineStatus() == 0 && GetBatteryLevel() < 100)
+	int battery_ACLine = GetBatteryACLineStatus();
+	int dmFrequency = GetDisplayFrequency();
+	//if (FileExists(cmdpath) && GetBatteryACLineStatus() == 0 && GetBatteryLevel() < 100)
+	if (FileExists(cmdpath) && ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60)) )
 	{
 		//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
 		int result = WinExec(runcmdpath, runcmdshow);
@@ -1496,19 +1497,26 @@ void CCore::Run()
 				//MessageBox(NULL , "¹¤×÷ÖÐ...", "MyFunColtrol" , 0);
 				if (m_ApmPowerStatusChange == 1)
 				{
-
+					int battery_ACLine = GetBatteryACLineStatus();
+					int dmFrequency = GetDisplayFrequency();
 					if (!FileExists(cmdpath))
 					{
 						LOG("runApmPowerStatusChange is not exists filepath");
 					}
 					else {
 						//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
-						int result = WinExec(runcmdpath, runcmdshow);
-						// don't show cmd
-						//int result = WinExec((runcmdpath),1);
-						int resultLog = -1;
-						LOG("runApmPowerStatusChange");
-						LOG(resultLog = result);
+						int battery_ACLine = GetBatteryACLineStatus();
+						int dmFrequency = GetDisplayFrequency();
+						if ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60))
+						{
+							int result = WinExec(runcmdpath, runcmdshow);
+							// don't show cmd
+							//int result = WinExec((runcmdpath),1);
+							int resultLog = -1;
+							LOG("runApmPowerStatusChange");
+							LOG(resultLog = result);
+
+						}
 					}
 
 					//DWORD fileAttr = GetFileAttributes(cmdpath);
