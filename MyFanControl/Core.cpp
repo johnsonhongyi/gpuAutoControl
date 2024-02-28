@@ -5,6 +5,9 @@
 #include <direct.h>
 #include <iostream>
 
+//#include <wtsapi32.h> 
+#include <tlhelp32.h>
+#include <tchar.h>
 
 int TEMP_LIST[10] = { 90, 85, 80, 75, 70, 65, 60, 55, 50, 45 };
 
@@ -94,6 +97,100 @@ BOOL FileExists(CString fileName)
 		return true;
 	}
 	return false;
+}
+
+CString StringToCString(string str)
+ 
+{
+ 
+	CString result;
+ 
+	for (int i=0;i<(int)str.length();i++)
+ 
+	{
+ 
+	   result+=str[i];
+ 
+	}
+ 
+	return result;
+ 
+}
+
+string CStringToString(CString cstr)
+
+{
+	string result(cstr.GetLength(), 'e');
+	for (int i = 0;i < cstr.GetLength();i++)
+	{
+		result[i] = (char)cstr[i];
+	}
+	return result;
+}
+
+std::wstring ANSIToUnicode(const std::string& from)
+{
+	if (from.empty())
+	{
+		return std::wstring();
+	}
+
+	size_t unicodeLen = 0;
+	wchar_t* pUnicode = nullptr;
+	if (unicodeLen = ::MultiByteToWideChar(CP_ACP, 0, from.c_str(), -1, NULL, 0))
+	{
+		pUnicode = new wchar_t[unicodeLen + 1];
+		memset(pUnicode, 0, (unicodeLen + 1) * sizeof(wchar_t));
+		if (!::MultiByteToWideChar(CP_ACP, 0, from.c_str(), -1, (LPWSTR)pUnicode, unicodeLen))
+		{
+			delete[] pUnicode;//clean up if failed;  
+			return std::wstring();
+		}
+	}
+	else
+	{
+		return std::wstring();
+	}
+	std::wstring strRet(pUnicode);
+	delete[] pUnicode;//clean up if success;
+
+	return std::move(strRet);
+}
+
+
+DWORD FindProcessIDByName(const std::string& processName)//0 not found ; other found; processName "processName.exe"
+{
+	//processName = CStringToString(processName);
+	HANDLE hProcessSnap;
+	PROCESSENTRY32 pe32;
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hProcessSnap == INVALID_HANDLE_VALUE)
+	{
+		return(0);
+	}
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap, &pe32))
+	{
+		CloseHandle(hProcessSnap);          // clean the snapshot object
+		return(0);
+	}
+	DWORD processId = 0;
+	do
+	{
+		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//进程名称
+		//printf("name:%ls",ANSIToUnicode(processName));
+		//printf("pe32:%ls",std::wstring(pe32.szExeFile));
+		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//进程名称
+		if (std::string(pe32.szExeFile) == (processName))//进程名称
+
+
+		{
+			processId = pe32.th32ProcessID;//进程ID
+			break;
+		}
+	} while (Process32Next(hProcessSnap, &pe32));
+	CloseHandle(hProcessSnap);
+	return(processId);
 }
 
 CGPUInfo::CGPUInfo()
@@ -1443,6 +1540,12 @@ void CCore::Run()
 	CString dirPath = GetExePath();
 	CString inipath = dirPath + "\\MyFanconfig.ini";
 	//int battery_percent = GetBatteryLevel();
+	CString processname;
+	CString processpath;
+	CString processcmd;
+	CString processcmdpath;
+	int procshowcmd = SW_SHOWMINIMIZED;
+	//CString showcmd;
 
 	if (FileExists(inipath))
 	{
@@ -1455,6 +1558,16 @@ void CCore::Run()
 		runcmdpath = runcmd +" "+ cmdpath;
 		GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
 		runcmdshow = atoi(returnValue);
+
+		GetPrivateProfileString("processcheck", "processname", 0, returnValue, 100, inipath);
+		processname = returnValue;
+		GetPrivateProfileString("processcheck", "processpath", 0, returnValue, 100, inipath);
+		processpath = returnValue;
+		GetPrivateProfileString("processcheck", "processcmd", 0, returnValue, 100, inipath);
+		CString processcmd = returnValue;
+		processcmdpath = processcmd + " " + processpath;
+		GetPrivateProfileString("processcheck", "procshowcmd ", 0, returnValue, 100, inipath);
+		procshowcmd = atoi(returnValue);
 
 	}
 	int battery_ACLine = GetBatteryACLineStatus();
@@ -1469,6 +1582,20 @@ void CCore::Run()
 		int resultLog = -1;
 		LOG("runApmPowerStatusChangeInitCheck");
 		LOG(resultLog = result);
+	}
+
+	if (!processname.IsEmpty())
+	{
+		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
+		{
+			LOG("check process not runing");
+			int result = WinExec(processcmdpath, procshowcmd);
+			// don't show cmd
+			//int result = WinExec((runcmdpath),1);
+			int resultLog = -1;
+			LOG("run proc ok ");
+			//LOG(resultLog = result);
+		}
 	}
 
 	if (m_config.TakeOver == 1)
@@ -1509,13 +1636,26 @@ void CCore::Run()
 						int dmFrequency = GetDisplayFrequency();
 						if ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60))
 						{
-							int result = WinExec(runcmdpath, runcmdshow);
+							int result = WinExec(processcmdpath, runcmdshow);
 							// don't show cmd
 							//int result = WinExec((runcmdpath),1);
 							int resultLog = -1;
 							LOG("runApmPowerStatusChange");
 							LOG(resultLog = result);
 
+						}
+						if (!processname.IsEmpty())
+						{
+							if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
+							{
+								LOG("check process not runing");
+								int result = WinExec(processcmdpath, procshowcmd);
+								// don't show cmd
+								//int result = WinExec((runcmdpath),1);
+								int resultLog = -1;
+								LOG("runApm check proc finish ");
+								//LOG(resultLog = result);
+							}
 						}
 					}
 
@@ -1880,13 +2020,13 @@ void CCore::Work()
 	{
 		if (m_config.LockGPUFrequency)
 		{
-			if (m_GpuInfo.m_nGraphicsClock != m_config.GPU_LockClock)
-			{
-				if (m_config.TakeOver)
-					m_GpuInfo.LockFrequency(m_config.GPUFrequency);
-				else
-					m_GpuInfo.LockFrequency(m_config.GPU_LockClock);
-			}
+			//if (m_GpuInfo.m_nGraphicsClock != m_config.GPUFrequency)
+			//{
+			if (m_config.TakeOver)
+				m_GpuInfo.LockFrequency(m_config.GPUFrequency);
+			else
+				m_GpuInfo.LockFrequency(m_config.GPU_LockClock);
+			//}
 
 		}
 		else
