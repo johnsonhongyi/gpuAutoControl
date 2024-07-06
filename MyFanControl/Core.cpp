@@ -1636,11 +1636,11 @@ void CCore::Run()
 						int dmFrequency = GetDisplayFrequency();
 						if ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60))
 						{
-							int result = WinExec(processcmdpath, runcmdshow);
+							int result = WinExec(runcmdpath, runcmdshow);
 							// don't show cmd
 							//int result = WinExec((runcmdpath),1);
 							int resultLog = -1;
-							LOG("runApmPowerStatusChange");
+							LOG("run set dmFrequency ok");
 							LOG(resultLog = result);
 
 						}
@@ -1648,7 +1648,7 @@ void CCore::Run()
 						{
 							if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
 							{
-								LOG("check process not runing");
+								LOG("check processname not runing");
 								int result = WinExec(processcmdpath, procshowcmd);
 								// don't show cmd
 								//int result = WinExec((runcmdpath),1);
