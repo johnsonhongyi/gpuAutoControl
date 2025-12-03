@@ -1,33 +1,33 @@
-#pragma once
+ï»¿#pragma once
 using namespace std;
 #include <string>
 
 
-int GetTime(tm *pt = 0, int offset = 0);//µÃµ½µ±Ç°Ê±¼ä£¬6Î»ÊıÊ±¼ä92500,offsetÓÃÓÚµÃµ½offsetÖ®ºóÃëµÄÊ±¼ä
-int GetTimeInterval(int a, int b, int *p = 0);//Ê±¼ä²î£¬ÊäÈëÁ½¸ö6Î»ÊıÊ±¼ä£¬Èç¿ªÅÌÊ±¼ä91500£¬µÃµ½a-b£¬²¢×ª»¯Îª6Î»ÊıÊ±¼ä£¬Ö¸Õëp½ÓÊÜÒÔÃë¼ÆµÄÊ±¼ä²î
-CString GetExePath();//»ñµÃexeµ±Ç°ÔËĞĞÂ·¾¶
+int GetTime(tm *pt = 0, int offset = 0);//å¾—åˆ°å½“å‰æ—¶é—´ï¼Œ6ä½æ•°æ—¶é—´92500,offsetç”¨äºå¾—åˆ°offsetä¹‹åç§’çš„æ—¶é—´
+int GetTimeInterval(int a, int b, int *p = 0);//æ—¶é—´å·®ï¼Œè¾“å…¥ä¸¤ä¸ª6ä½æ•°æ—¶é—´ï¼Œå¦‚å¼€ç›˜æ—¶é—´91500ï¼Œå¾—åˆ°a-bï¼Œå¹¶è½¬åŒ–ä¸º6ä½æ•°æ—¶é—´ï¼ŒæŒ‡é’ˆpæ¥å—ä»¥ç§’è®¡çš„æ—¶é—´å·®
+CString GetExePath();//è·å¾—exeå½“å‰è¿è¡Œè·¯å¾„
 BOOL FileExists(CString fileName); //filepath
 
 
 
 struct ECData
 {
-	byte Remote;//ÎÂ¶È
+	byte Remote;//æ¸©åº¦
 	byte Local;
-	byte FanDuty;//·çÉÈ¸ºÔØ£¬0-255
+	byte FanDuty;//é£æ‰‡è´Ÿè½½ï¼Œ0-255
 	byte Reserve;
 };
 
-//ÎÂ¶È¿ØÖÆÏà¹Øº¯ÊıÀàĞÍÉùÃ÷
-typedef  BOOL(InitIo)(void);//³õÊ¼»¯½Ó¿Ú
-typedef  void(SetFanDuty)(int fan_id, int duty);//ÉèÖÃ·çÉÈ¸ºÔØ£¬fan_idÎªÕıÕûÊı£¬dutyÎª0-255¸ºÔØ
-typedef  int(SetFANDutyAuto)(int fan_id);//ÉèÖÃ·çÉÈ×Ô¶¯
-typedef  ECData(GetTempFanDuty)(int fan_id);//µÃµ½·çÉÈ×´Ì¬
-typedef  int(GetFANCounter)(void);//·µ»Ø·çÉÈÊıÁ¿
-typedef  const char*(GetECVersion)(void);//·µ»Ø°æ±¾ĞÅÏ¢
-typedef  int(GetFanRpm)(void);//µÃµ½·çÉÈ×ªËÙ
+//æ¸©åº¦æ§åˆ¶ç›¸å…³å‡½æ•°ç±»å‹å£°æ˜
+typedef  BOOL(InitIo)(void);//åˆå§‹åŒ–æ¥å£
+typedef  void(SetFanDuty)(int fan_id, int duty);//è®¾ç½®é£æ‰‡è´Ÿè½½ï¼Œfan_idä¸ºæ­£æ•´æ•°ï¼Œdutyä¸º0-255è´Ÿè½½
+typedef  int(SetFANDutyAuto)(int fan_id);//è®¾ç½®é£æ‰‡è‡ªåŠ¨
+typedef  ECData(GetTempFanDuty)(int fan_id);//å¾—åˆ°é£æ‰‡çŠ¶æ€
+typedef  int(GetFANCounter)(void);//è¿”å›é£æ‰‡æ•°é‡
+typedef  const char*(GetECVersion)(void);//è¿”å›ç‰ˆæœ¬ä¿¡æ¯
+typedef  int(GetFanRpm)(void);//å¾—åˆ°é£æ‰‡è½¬é€Ÿ
 
-//GPU¿ØÖÆÏà¹Øº¯ÊıÀàĞÍÉùÃ÷
+//GPUæ§åˆ¶ç›¸å…³å‡½æ•°ç±»å‹å£°æ˜
 typedef void(__stdcall In_0_Out_0_Func)(void);
 typedef int(__stdcall In_0_Out_n_Func)(void);
 typedef int(__stdcall In_1_Out_n_Func)(int);
@@ -59,29 +59,29 @@ public:
 	int m_nMemoryRangeMax;
 	int m_nMemoryRangeMin;
 
-	int m_nStandardFrequency;//Ä¬ÈÏÆµÂÊ£¬¼´Õı³£ÏÂ²»³¬ÆµÒ²²»½µÆµµÄÆµÂÊ
-	int m_nMaxFrequency;//×î´óÆµÂÊ£¬¼´×î´óÔÊĞí³¬ÆµµÄÆµÂÊ
+	int m_nStandardFrequency;//é»˜è®¤é¢‘ç‡ï¼Œå³æ­£å¸¸ä¸‹ä¸è¶…é¢‘ä¹Ÿä¸é™é¢‘çš„é¢‘ç‡
+	int m_nMaxFrequency;//æœ€å¤§é¢‘ç‡ï¼Œå³æœ€å¤§å…è®¸è¶…é¢‘çš„é¢‘ç‡
 
 	int m_nGraphicsClock;
 	int m_nMemoryClock;
-	//int m_nOverClock; //Ìí¼Ó³¬ÆµÊ±ÖÓ
-	//int m_nUsage;//Ê¹ÓÃÂÊ
-	int ForcedRefreshGPU;//saveÖØÖÃGPUÆµÂÊ
-	int m_nLockClock;//ÒÑÉèÖÃµÄ×î´óºËĞÄÆµÂÊ
-	int m_nOverLockClock;//ÒÑÉèÖÃµÄ×î´óºËĞÄÆµÂÊ
+	//int m_nOverClock; //æ·»åŠ è¶…é¢‘æ—¶é’Ÿ
+	//int m_nUsage;//ä½¿ç”¨ç‡
+	int ForcedRefreshGPU;//saveé‡ç½®GPUé¢‘ç‡
+	int m_nLockClock;//å·²è®¾ç½®çš„æœ€å¤§æ ¸å¿ƒé¢‘ç‡
+	int m_nOverLockClock;//å·²è®¾ç½®çš„æœ€å¤§æ ¸å¿ƒé¢‘ç‡
 	int nv_Api_init;//nvapi init status 0,1 OK 2:fail
 public:
-	BOOL Update();//¸üĞÂGPUÆµÂÊºÍÊ¹ÓÃÂÊ
-	void ReloadAPI(int forceinit = 0);//³õÊ¼»¯API
-	BOOL Init();//³õÊ¼»¯API
-	BOOL LockFrequency(int frequency = 0);//Ëø¶¨×î´óÆµÂÊ£¬¿ÉÒÔÓÃÓÚ³¬Æµ£¬Ó¦Ğ¡ÓÚm_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)£¬ÈôÉèÖÃ0£¬Ôò»¹Ô­ÉèÖÃ
-	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780, int overClock2 = 140);//ÓÃÓÚ³¬Æµ£¬Ó¦Ğ¡ÓÚm_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)£¬ÈôÉèÖÃ0£¬Ôò»¹Ô­ÉèÖÃ
+	BOOL Update();//æ›´æ–°GPUé¢‘ç‡å’Œä½¿ç”¨ç‡
+	void ReloadAPI(int forceinit = 0);//åˆå§‹åŒ–API
+	BOOL Init();//åˆå§‹åŒ–API
+	BOOL LockFrequency(int frequency = 0);//é”å®šæœ€å¤§é¢‘ç‡ï¼Œå¯ä»¥ç”¨äºè¶…é¢‘ï¼Œåº”å°äºm_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)ï¼Œè‹¥è®¾ç½®0ï¼Œåˆ™è¿˜åŸè®¾ç½®
+	BOOL OverClockFrequency(int frequency = 0,int memOverClock = 0, int limitUV = 780, int overClock2 = 140);//ç”¨äºè¶…é¢‘ï¼Œåº”å°äºm_nBoostClock+(m_nGraphicsRangeMax - m_nGraphicsRangeMin)ï¼Œè‹¥è®¾ç½®0ï¼Œåˆ™è¿˜åŸè®¾ç½®
 
 protected:
 	HMODULE m_hGPUdll;
-	//int m_nLockClock;//ÒÑÉèÖÃµÄ×î´óºËĞÄÆµÂÊ
-	//int m_nOverLockClock;//ÒÑÉèÖÃµÄ×î´óºËĞÄÆµÂÊ
-	//½Ó¿Úº¯Êı
+	//int m_nLockClock;//å·²è®¾ç½®çš„æœ€å¤§æ ¸å¿ƒé¢‘ç‡
+	//int m_nOverLockClock;//å·²è®¾ç½®çš„æœ€å¤§æ ¸å¿ƒé¢‘ç‡
+	//æ¥å£å‡½æ•°
 	In_0_Out_n_Func *m_pfnInitGPU_API;
 	In_1_Out_n_Func *m_pfnSet_GPU_Number;
 	In_0_Out_n_Func *m_pfnGet_GPU_Base_Clock;
@@ -125,35 +125,35 @@ class CConfig
 public:
 	CConfig();
 public:
-	int DutyList[2][10];//2¸ö·çÉÈ£¬cpu£¬gpu£¬Ã¿¸ö·çÉÈ10×éÊı×Ö£¬·Ö±ğ¶ÔÓ¦90+£¬85+£¬80+£¬75+£¬70+£¬65+£¬60+£¬55+£¬50+£¬50-ÎÂ¶ÈÊ±µÄ·çÉÈ¸ºÔØ
-	int TransitionTemp;//¹ı¶ÉÎÂ¶È£¬µ±·çÉÈ½µÎÂÊ±£¬ĞèÒª±ÈãĞÖµÎÂ¶ÈÔÙµÍTransitionTemp£¬²Å»á½µµÍ·çÉÈ×ªËÙ
-	int UpdateInterval;//¸üĞÂ¼ä¸ô
-	BOOL Linear;//ÏßĞÔ£¬ÏßĞÔµ÷½Ú·çÉÈ×ªËÙ£¬¶ø²»ÊÇ½×Ìİµ÷½Ú
-	BOOL TakeOver;//½Ó¹Ü¿ØÖÆ£¬Èç¹ûÎª·ñ£¬ÔòÖ»»ñÈ¡×´Ì¬£¬²¢²»½øĞĞ¿ØÖÆ ¶¯Ì¬
-	int ForceTemp;//Ç¿ÖÆÀäÈ´Ä¿±êÎÂ¶È
-	//GPU¿ØÖÆ
-	BOOL LockGPUFrequency;//ÊÇ·ñ¿ØÖÆGPUÆµÂÊ
-	int GPUFrequency;//GPUÆµÂÊÏŞÖÆ
-	int GPUOverClock;//GPU³¬Æµ
-	int GPUOverMEMClock;//GPUÏÔ´æ
-	int TakeOverDown;//¶¯Ì¬¿ØÖÆ¼ÆÊıÆ÷
-	int TakeOverUp;//¶¯Ì¬¿ØÖÆ¼ÆÊıÆ÷
-	int TakeOverLock;//¶¯Ì¬Lock¼ÆÊıÆ÷
-	int upClockPercent;//Õ¼ÓÃÂÊÉıÆµãĞÖµ
-	int downClockPercent;//Õ¼ÓÃÂÊ½µÆµãĞÖµ
-	int downTemplimit;//ÎÂ¿Ø½µÆµãĞÖµ
-	int upTemplimit;//ÎÂ¿ØÉıÆµãĞÖµ
-	int upClocklimit;//ÎÂ¿ØÆµÂÊãĞÖµ
-	int timelimit;//ÎÂ¿ØÖÜÆÚãĞÖµ
-	int GPU_LockClock; //³õÊ¼»¯Ëø¶¨ÆµÂÊ
-	int CurveUV_limit; //³õÊ¼»¯mv
-	int OverClock2; //³õÊ¼»¯mv
+	int DutyList[2][10];//2ä¸ªé£æ‰‡ï¼Œcpuï¼Œgpuï¼Œæ¯ä¸ªé£æ‰‡10ç»„æ•°å­—ï¼Œåˆ†åˆ«å¯¹åº”90+ï¼Œ85+ï¼Œ80+ï¼Œ75+ï¼Œ70+ï¼Œ65+ï¼Œ60+ï¼Œ55+ï¼Œ50+ï¼Œ50-æ¸©åº¦æ—¶çš„é£æ‰‡è´Ÿè½½
+	int TransitionTemp;//è¿‡æ¸¡æ¸©åº¦ï¼Œå½“é£æ‰‡é™æ¸©æ—¶ï¼Œéœ€è¦æ¯”é˜ˆå€¼æ¸©åº¦å†ä½TransitionTempï¼Œæ‰ä¼šé™ä½é£æ‰‡è½¬é€Ÿ
+	int UpdateInterval;//æ›´æ–°é—´éš”
+	BOOL Linear;//çº¿æ€§ï¼Œçº¿æ€§è°ƒèŠ‚é£æ‰‡è½¬é€Ÿï¼Œè€Œä¸æ˜¯é˜¶æ¢¯è°ƒèŠ‚
+	BOOL TakeOver;//æ¥ç®¡æ§åˆ¶ï¼Œå¦‚æœä¸ºå¦ï¼Œåˆ™åªè·å–çŠ¶æ€ï¼Œå¹¶ä¸è¿›è¡Œæ§åˆ¶ åŠ¨æ€
+	int ForceTemp;//å¼ºåˆ¶å†·å´ç›®æ ‡æ¸©åº¦
+	//GPUæ§åˆ¶
+	BOOL LockGPUFrequency;//æ˜¯å¦æ§åˆ¶GPUé¢‘ç‡
+	int GPUFrequency;//GPUé¢‘ç‡é™åˆ¶
+	int GPUOverClock;//GPUè¶…é¢‘
+	int GPUOverMEMClock;//GPUæ˜¾å­˜
+	int TakeOverDown;//åŠ¨æ€æ§åˆ¶è®¡æ•°å™¨
+	int TakeOverUp;//åŠ¨æ€æ§åˆ¶è®¡æ•°å™¨
+	int TakeOverLock;//åŠ¨æ€Lockè®¡æ•°å™¨
+	int upClockPercent;//å ç”¨ç‡å‡é¢‘é˜ˆå€¼
+	int downClockPercent;//å ç”¨ç‡é™é¢‘é˜ˆå€¼
+	int downTemplimit;//æ¸©æ§é™é¢‘é˜ˆå€¼
+	int upTemplimit;//æ¸©æ§å‡é¢‘é˜ˆå€¼
+	int upClocklimit;//æ¸©æ§é¢‘ç‡é˜ˆå€¼
+	int timelimit;//æ¸©æ§å‘¨æœŸé˜ˆå€¼
+	int GPU_LockClock; //åˆå§‹åŒ–é”å®šé¢‘ç‡
+	int CurveUV_limit; //åˆå§‹åŒ–mv
+	int OverClock2; //åˆå§‹åŒ–mv
 
 
 public:
-	void LoadDefault();//ÔØÈëÄ¬ÈÏÉèÖÃ
-	void LoadConfig();//ÔØÈëÅäÖÃ
-	void SaveConfig();//±£´æÅäÖÃ
+	void LoadDefault();//è½½å…¥é»˜è®¤è®¾ç½®
+	void LoadConfig();//è½½å…¥é…ç½®
+	void SaveConfig();//ä¿å­˜é…ç½®
 };
 
 
@@ -173,27 +173,27 @@ protected:
 	GetFanRpm		*	m_pfnGetFANRPM[2];
 
 public:
-	BOOL m_nInit;//ÊÇ·ñ³õÊ¼»¯£¬0Î´³õÊ¼»¯£¬1³õÊ¼»¯³É¹¦£¬2³õÊ¼»¯Ê§°Ü
+	BOOL m_nInit;//æ˜¯å¦åˆå§‹åŒ–ï¼Œ0æœªåˆå§‹åŒ–ï¼Œ1åˆå§‹åŒ–æˆåŠŸï¼Œ2åˆå§‹åŒ–å¤±è´¥
 	int m_start_overclock; //0, 1, 2 NvApiInit fail
-	int m_nExit;//ÍË³öĞÅºÅ£¬0£¬²»ÍË³ö£¬1£¬ĞèÒªÍË³ö£¬2£¬ÄÚºËÒÑÍË³ö
-	HINSTANCE m_hInstDLL;//Ä£¿édll
-	//HINSTANCE m_nvapidll;//Ä£¿é nvapidll
-	CConfig m_config;//ÅäÖÃÎÄ¼ş
-	CGPUInfo m_GpuInfo;//gpuÆµÂÊ¿ØÖÆ¶ÔÏó
-	int m_nCurTemp[2];//µ±Ç°ÎÂ¶È
-	int m_nLastTemp[2];//ÉÏÒ»´ÎÎÂ¶È
-	int m_nSetDuty[2];//ÉèÖÃµÄ¸ºÔØ
-	int m_nSetDutyLevel[2];//ÉèÖÃµÄ×ªËÙµ²Î»£¬×îµÍËÙµµÎª1£¬×î¸ßËÙµµÎª10
-	int m_nCurDuty[2];//µ±Ç°¸ºÔØ
-	int m_nCurRPM[2];//µ±Ç°×ªËÙ
-	BOOL m_bUpdateRPM;//ÊÇ·ñ¸üĞÂ×ªËÙ£¬Èç¹ûÎª0£¬Ö»¸üĞÂ·çÉÈÎÂ¶ÈºÍ¸ºÔØ
-	int m_nLastUpdateTime;//×îºó¸üĞÂÊ±¼ä
-	int m_TakeOverTimeOut;//¶¯Ì¬Ëø¶¨³¬Ê±Ê±¼ä
-	int m_ApmPowerStatusChange; //µç³Ø×´Ì¬¸Ä±ä
-	BOOL m_bForcedCooling;//Ç¿ÖÆÀäÈ´
-	BOOL m_bTakeOverStatus;//½Ó¹Ü¿ØÖÆ×´Ì¬£¬ÃèÊö×îºóÒ»´Îµ÷ÓÃµÄÊÇm_pfnSetFanDuty£¨TRUE£©»¹ÊÇm_pfnSetFANDutyAuto£¨FALSE£©
-	BOOL m_bForcedRefresh;//Á¢¼´Ë¢ĞÂ
-	//int m_nGPU_LockClock; //³õÊ¼»¯Ëø¶¨ÆµÂÊ
+	int m_nExit;//é€€å‡ºä¿¡å·ï¼Œ0ï¼Œä¸é€€å‡ºï¼Œ1ï¼Œéœ€è¦é€€å‡ºï¼Œ2ï¼Œå†…æ ¸å·²é€€å‡º
+	HINSTANCE m_hInstDLL;//æ¨¡å—dll
+	//HINSTANCE m_nvapidll;//æ¨¡å— nvapidll
+	CConfig m_config;//é…ç½®æ–‡ä»¶
+	CGPUInfo m_GpuInfo;//gpué¢‘ç‡æ§åˆ¶å¯¹è±¡
+	int m_nCurTemp[2];//å½“å‰æ¸©åº¦
+	int m_nLastTemp[2];//ä¸Šä¸€æ¬¡æ¸©åº¦
+	int m_nSetDuty[2];//è®¾ç½®çš„è´Ÿè½½
+	int m_nSetDutyLevel[2];//è®¾ç½®çš„è½¬é€ŸæŒ¡ä½ï¼Œæœ€ä½é€Ÿæ¡£ä¸º1ï¼Œæœ€é«˜é€Ÿæ¡£ä¸º10
+	int m_nCurDuty[2];//å½“å‰è´Ÿè½½
+	int m_nCurRPM[2];//å½“å‰è½¬é€Ÿ
+	BOOL m_bUpdateRPM;//æ˜¯å¦æ›´æ–°è½¬é€Ÿï¼Œå¦‚æœä¸º0ï¼Œåªæ›´æ–°é£æ‰‡æ¸©åº¦å’Œè´Ÿè½½
+	int m_nLastUpdateTime;//æœ€åæ›´æ–°æ—¶é—´
+	int m_TakeOverTimeOut;//åŠ¨æ€é”å®šè¶…æ—¶æ—¶é—´
+	int m_ApmPowerStatusChange; //ç”µæ± çŠ¶æ€æ”¹å˜
+	BOOL m_bForcedCooling;//å¼ºåˆ¶å†·å´
+	BOOL m_bTakeOverStatus;//æ¥ç®¡æ§åˆ¶çŠ¶æ€ï¼Œæè¿°æœ€åä¸€æ¬¡è°ƒç”¨çš„æ˜¯m_pfnSetFanDutyï¼ˆTRUEï¼‰è¿˜æ˜¯m_pfnSetFANDutyAutoï¼ˆFALSEï¼‰
+	BOOL m_bForcedRefresh;//ç«‹å³åˆ·æ–°
+	//int m_nGPU_LockClock; //åˆå§‹åŒ–é”å®šé¢‘ç‡
 
 	//int limitClock;
 	//int limitTime;
@@ -206,22 +206,22 @@ public:
 	//int resultLog ;
 	//int baseMemClock ;
 	//int nGPU_Util_limit ;
-	////m_core.m_config.Linear ÏßĞÔ¿ØÖÆ
-	//int count_time ; //Ê¹ÓÃÖÜÆÚ*Ê±¼äÍ³¼Æ
+	////m_core.m_config.Linear çº¿æ€§æ§åˆ¶
+	//int count_time ; //ä½¿ç”¨å‘¨æœŸ*æ—¶é—´ç»Ÿè®¡
 
 public:
 	BOOL Init();
 	void Uninit();
-	void Run();//ÄÚºËÖ÷Ñ­»·
-	void Work();//¸üĞÂÎÂ¶È¡¢¸ºÔØ£¬¼ÆËã¸ºÔØ²¢½øĞĞÉèÖÃ
-	void Update();//¸üĞÂ·çÉÈ×´Ì¬
-	void Control();//¿ØÖÆ
-	void CalcLinearDuty();//ÇóµÃÏßĞÔÆ½»¬ºóµÄ¸ºÔØ£¨ÏßĞÔÆ½»¬¿ØÖÆ£©
-	void CalcStdDuty();//ÇóµÃµ±Ç°ÎÂ¶È¶ÔÓ¦µÄ¸ºÔØ£¨½×Ìİ¿ØÖÆ£©
-	void ResetFan();//ÖØÖÃ·çÉÈÎª×Ô¶¯¿ØÖÆ
+	void Run();//å†…æ ¸ä¸»å¾ªç¯
+	void Work();//æ›´æ–°æ¸©åº¦ã€è´Ÿè½½ï¼Œè®¡ç®—è´Ÿè½½å¹¶è¿›è¡Œè®¾ç½®
+	void Update();//æ›´æ–°é£æ‰‡çŠ¶æ€
+	void Control();//æ§åˆ¶
+	void CalcLinearDuty();//æ±‚å¾—çº¿æ€§å¹³æ»‘åçš„è´Ÿè½½ï¼ˆçº¿æ€§å¹³æ»‘æ§åˆ¶ï¼‰
+	void CalcStdDuty();//æ±‚å¾—å½“å‰æ¸©åº¦å¯¹åº”çš„è´Ÿè½½ï¼ˆé˜¶æ¢¯æ§åˆ¶ï¼‰
+	void ResetFan();//é‡ç½®é£æ‰‡ä¸ºè‡ªåŠ¨æ§åˆ¶
 	void ResetGPUFrequancy();
 	void ResetSleepStatus();
-	void SetFanDuty();//ÉèÖÃ·çÉÈ×ªËÙ
+	void SetFanDuty();//è®¾ç½®é£æ‰‡è½¬é€Ÿ
 
 };
 

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "Core.h"
 
 #include <Windows.h>
@@ -25,7 +25,7 @@ int GetTime(tm *pt, int offset)
 }
 int GetTimeInterval(int a, int b, int *p)
 {
-	//Ê±¼ä²î£¬ÊäÈëÁ½¸ö6Î»ÊıÊ±¼ä£¬Èç¿ªÅÌÊ±¼ä91500£¬µÃµ½a-b£¬²¢×ª»¯Îª6Î»ÊıÊ±¼ä£¬Ö¸Õëp½ÓÊÜÒÔÃë¼ÆµÄÊ±¼ä²î
+	//æ—¶é—´å·®ï¼Œè¾“å…¥ä¸¤ä¸ª6ä½æ•°æ—¶é—´ï¼Œå¦‚å¼€ç›˜æ—¶é—´91500ï¼Œå¾—åˆ°a-bï¼Œå¹¶è½¬åŒ–ä¸º6ä½æ•°æ—¶é—´ï¼ŒæŒ‡é’ˆpæ¥å—ä»¥ç§’è®¡çš„æ—¶é—´å·®
 	int a1 = a / 10000;
 	int a2 = (a % 10000) / 100;
 	int a3 = a % 100;
@@ -177,15 +177,15 @@ DWORD FindProcessIDByName(const std::string& processName)//0 not found ; other f
 	DWORD processId = 0;
 	do
 	{
-		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//½ø³ÌÃû³Æ
+		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//è¿›ç¨‹åç§°
 		//printf("name:%ls",ANSIToUnicode(processName));
 		//printf("pe32:%ls",std::wstring(pe32.szExeFile));
-		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//½ø³ÌÃû³Æ
-		if (std::string(pe32.szExeFile) == (processName))//½ø³ÌÃû³Æ
+		//if (std::wstring(pe32.szExeFile) == ANSIToUnicode(processName))//è¿›ç¨‹åç§°
+		if (std::string(pe32.szExeFile) == (processName))//è¿›ç¨‹åç§°
 
 
 		{
-			processId = pe32.th32ProcessID;//½ø³ÌID
+			processId = pe32.th32ProcessID;//è¿›ç¨‹ID
 			break;
 		}
 	} while (Process32Next(hProcessSnap, &pe32));
@@ -199,7 +199,7 @@ CGPUInfo::CGPUInfo()
 	{
 		Update();
 
-		TRACE0("³É¹¦¼ÓÔØNVGPU_DLL.dll¡£\n");
+		TRACE0("æˆåŠŸåŠ è½½NVGPU_DLL.dllã€‚\n");
 
 	}
 	//
@@ -758,7 +758,7 @@ CGPUInfo::~CGPUInfo()
 {
 	if (m_hGPUdll != NULL)
 	{
-		LockFrequency();//»¹Ô­GPUÆµÂÊÉèÖÃ
+		LockFrequency();//è¿˜åŸGPUé¢‘ç‡è®¾ç½®
 		m_pfnCloseGPU_API();
 		FreeLibrary(m_hGPUdll);
 		m_hGPUdll = NULL;
@@ -799,7 +799,7 @@ BOOL CGPUInfo::Init()
 		//LogFile = fopen(logPath, "a");
 		LogFile = fopen(logPath, "w");
 
-	nv_Api_init = 0; //³õÊ¼»¯check 128
+	nv_Api_init = 0; //åˆå§‹åŒ–check 128
 	if (NvApi)
 	{
 		NvApi = false;
@@ -884,13 +884,13 @@ BOOL CGPUInfo::Init()
 
 
 
-	TRACE0("¿ªÊ¼¼ÓÔØNVGPU_DLL.dll¡£\n");
+	TRACE0("å¼€å§‹åŠ è½½NVGPU_DLL.dllã€‚\n");
 	m_hGPUdll = NULL;
 	CString dllpth = GetExePath() + "\\NVGPU_DLL.dll";
 	m_hGPUdll = LoadLibrary(dllpth);
 	if (m_hGPUdll == NULL)
 	{
-		TRACE0("ÎŞ·¨¼ÓÔØ" + dllpth + "\n");
+		TRACE0("æ— æ³•åŠ è½½" + dllpth + "\n");
 		LOG("m_hGPUdll isNULL");
 		return FALSE;
 	}
@@ -932,10 +932,10 @@ BOOL CGPUInfo::Init()
 	m_pfnCloseGPU_API = (In_0_Out_0_Func*)::GetProcAddress(m_hGPUdll, "CloseGPU_API");
 	if (m_pfnInitGPU_API())
 	{
-		TRACE0("InitGPU_API³õÊ¼»¯Ê§°Ü¡£\n");
-		LOG("m_hGPUdll InitGPU_API³õÊ¼»¯Ê§°Ü¡£\n");
+		TRACE0("InitGPU_APIåˆå§‹åŒ–å¤±è´¥ã€‚\n");
+		LOG("m_hGPUdll InitGPU_APIåˆå§‹åŒ–å¤±è´¥ã€‚\n");
 		FreeLibrary(m_hGPUdll);
-		//LOG("m_hGPUdll InitGPU_API³õÊ¼»¯Ê§°Ü");
+		//LOG("m_hGPUdll InitGPU_APIåˆå§‹åŒ–å¤±è´¥");
 		m_hGPUdll = NULL;
 		return FALSE;
 	}
@@ -979,14 +979,14 @@ void CGPUInfo::ReloadAPI(int forceinit)
 	//if (m_nGPU_Temp ^ 0 && m_nGraphicsClock ^ 0 && m_nMemoryClock ^ 0)
 	if (m_nGPU_Temp == 0 && m_nGraphicsClock == 0 && m_nMemoryClock == 0)
 	{
-		TRACE0("¼ì²âÊı¾İÎª0,ÖØĞÂ¼ÓÔØNVGPU_DLL.dll¡£\n");
-		LOG("¼ì²âÊı¾İÎª0,ÖØĞÂ¼ÓÔØNVGPU_DLL.dll¡£\n");
+		TRACE0("æ£€æµ‹æ•°æ®ä¸º0,é‡æ–°åŠ è½½NVGPU_DLL.dllã€‚\n");
+		LOG("æ£€æµ‹æ•°æ®ä¸º0,é‡æ–°åŠ è½½NVGPU_DLL.dllã€‚\n");
 		Init();
 	}
 	else {
 		if (m_hGPUdll != NULL)
 		{
-			//TRACE0("ÎŞ·¨¼ÓÔØ" + dllpth + "\n");
+			//TRACE0("æ— æ³•åŠ è½½" + dllpth + "\n");
 			LOG("m_hGPUdll isNotNULL Free and then reload Init");
 			nv_Api_init = 0;
 			m_pfnCloseGPU_API();
@@ -1002,8 +1002,8 @@ void CGPUInfo::ReloadAPI(int forceinit)
 		else{
 			if (m_pfnInitGPU_API() || forceinit == 0)
 			{
-				TRACE0("InitGPU_APIÊ§°Ü¡£\n");
-				LOG("m_hGPUdll InitGPU_APIÊ§°Ü¡£\n");
+				TRACE0("InitGPU_APIå¤±è´¥ã€‚\n");
+				LOG("m_hGPUdll InitGPU_APIå¤±è´¥ã€‚\n");
 				m_pfnCloseGPU_API();
 				FreeLibrary(m_hGPUdll);
 				m_hGPUdll = NULL;
@@ -1072,23 +1072,23 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	if (frequency >= 400 && frequency < m_nStandardFrequency)
 	//if (frequency >= m_nBaseClock && frequency < m_nStandardFrequency)
 	{
-		//½µÆµ
+		//é™é¢‘
 		GpuClock = frequency;
 	}
 
 	//else if (frequency > m_nStandardFrequency)
 	//else if (frequency)
 	//{
-	//	//³¬Æµ
+	//	//è¶…é¢‘
 	//	GpuOverclock = frequency - m_nStandardFrequency;
-	//	MemOverclock = GpuOverclock * m_nMemoryRangeMax / m_nGraphicsRangeMax;//°´ÕÕ±ÈÀı½øĞĞÏÔ´æ³¬Æµ
+	//	MemOverclock = GpuOverclock * m_nMemoryRangeMax / m_nGraphicsRangeMax;//æŒ‰ç…§æ¯”ä¾‹è¿›è¡Œæ˜¾å­˜è¶…é¢‘
 	//}
 	
 
 	//
 	//int rv1 = (m_pfnSet_CoreOC(0, GpuOverclock) == 0);
 	//if (!rv1)
-	//	AfxMessageBox("Set_CoreOCÊ§°Ü");
+	//	AfxMessageBox("Set_CoreOCå¤±è´¥");
 	int rv1 = 1;
 	int rv2 = 1;
 
@@ -1096,23 +1096,23 @@ BOOL CGPUInfo::LockFrequency(int frequency)
 	//
 	//int rv2 = (m_pfnSet_MEMOC(0, MemOverclock) == 0);
 	//if (!rv2)
-	//	AfxMessageBox("Set_MEMOCÊ§°Ü");
+	//	AfxMessageBox("Set_MEMOCå¤±è´¥");
 	////
 	int rv3 = (m_pfnLock_Frequency(0, GpuClock) == 0x19);
 
 	//if (!rv3)
 	//{
 	//	CString str;
-	//	str.Format("Lock_FrequencyÊ§°Ü: %d", GpuClock);
+	//	str.Format("Lock_Frequencyå¤±è´¥: %d", GpuClock);
 	//	AfxMessageBox(str);
-	//	//AfxMessageBox("Lock_FrequencyÊ§°Ü:" + GpuClock);
+	//	//AfxMessageBox("Lock_Frequencyå¤±è´¥:" + GpuClock);
 	//}
 
 	////
 	//int rv4 = 1;
 	////int rv4 = (m_pfnLock_Frequency_MEM(0, MemClock) == 0x19);
 	//if (!rv4)
-	//	AfxMessageBox("Lock_Frequency_MEMÊ§°Ü");
+	//	AfxMessageBox("Lock_Frequency_MEMå¤±è´¥");
 	//
 	return (rv1 && rv2 && rv3 && rv4);
 }
@@ -1147,17 +1147,17 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 	//int MemClock = 0;
 	//if (overClock > 0 && overClock < m_nStandardFrequency)
 	//{
-	//	//½µÆµ
+	//	//é™é¢‘
 	//	GpuClock = frequency;
 	//}
 	//else if (overClock > m_nStandardFrequency)
 	if (overClock > m_nStandardFrequency)
 	{
-		//³¬Æµ
+		//è¶…é¢‘
 		GpuOverclock = frequency;
-		//MemOverclock = GpuOverclock * m_nMemoryRangeMax / m_nGraphicsRangeMax;//°´ÕÕ±ÈÀı½øĞĞÏÔ´æ³¬Æµ
-		//MemOverclock = int (memOverClock /4); //¸üĞÂMemOverclockÆµÂÊ
-		MemOverclock = memOverClock; //¸üĞÂMemOverclockÆµÂÊ
+		//MemOverclock = GpuOverclock * m_nMemoryRangeMax / m_nGraphicsRangeMax;//æŒ‰ç…§æ¯”ä¾‹è¿›è¡Œæ˜¾å­˜è¶…é¢‘
+		//MemOverclock = int (memOverClock /4); //æ›´æ–°MemOverclocké¢‘ç‡
+		MemOverclock = memOverClock; //æ›´æ–°MemOverclocké¢‘ç‡
 
 	}
 	
@@ -1167,9 +1167,9 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 	if (!rv1)
 	{
 		CString str;
-		str.Format("Set_CoreOCÊ§°Ü: %d", GpuOverclock);
+		str.Format("Set_CoreOCå¤±è´¥: %d", GpuOverclock);
 		AfxMessageBox(str);
-		//AfxMessageBox("Set_CoreOCÊ§°Ü:"+ GpuOverclock);
+		//AfxMessageBox("Set_CoreOCå¤±è´¥:"+ GpuOverclock);
 	}
 	//
 	//int rv2 = 1;
@@ -1178,21 +1178,21 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 	if (!rv2)
 	{
 		CString str;
-		str.Format("Set_MEMOCÊ§°Ü: %d", MemOverclock);
+		str.Format("Set_MEMOCå¤±è´¥: %d", MemOverclock);
 		AfxMessageBox(str);
-		//AfxMessageBox("Set_MEMOCÊ§°Ü:"+ MemOverclock);
+		//AfxMessageBox("Set_MEMOCå¤±è´¥:"+ MemOverclock);
 	}
 	
 
 	//int rv3 = (m_pfnLock_Frequency(0, GpuClock) == 0x19);
 	//if (!rv3)
-	//	AfxMessageBox("Lock_FrequencyÊ§°Ü");
+	//	AfxMessageBox("Lock_Frequencyå¤±è´¥");
 	////
 	int rv3 = 1;
 	int rv4 = 1;
 	//int rv4 = (m_pfnLock_Frequency_MEM(0, MemClock) == 0x19);
 	//if (!rv4)
-	//	AfxMessageBox("Lock_Frequency_MEMÊ§°Ü");
+	//	AfxMessageBox("Lock_Frequency_MEMå¤±è´¥");
 	//
 
 	//
@@ -1232,7 +1232,7 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 				//	//frequencyDeltaKHz_OV[j] = frequencyDeltaKHz[i];
 				//	frequencyDeltaKHz_OV[j] = frequency_DeltaKHz_Value;
 				//	++j;
-				//}  //½ö¸üĞÂlimitÇúÏß
+				//}  //ä»…æ›´æ–°limitæ›²çº¿
 
 				voltageUV_OV[i] = voltageUV[i];
 				if (voltageUV[i] > limitUv)
@@ -1280,10 +1280,10 @@ void CConfig::LoadDefault()
 {
 
 		//add temp_limit
-	//int upClockPercent;//Õ¼ÓÃÂÊÉıÆµãĞÖµ
-	//int downClockPercent;//Õ¼ÓÃÂÊ½µÆµãĞÖµ
-	//int downTemplimit;//ÎÂ¿Ø½µÆµãĞÖµ
-	//int upTemplimit;//ÎÂ¿ØÉıÆµãĞÖµ
+	//int upClockPercent;//å ç”¨ç‡å‡é¢‘é˜ˆå€¼
+	//int downClockPercent;//å ç”¨ç‡é™é¢‘é˜ˆå€¼
+	//int downTemplimit;//æ¸©æ§é™é¢‘é˜ˆå€¼
+	//int upTemplimit;//æ¸©æ§å‡é¢‘é˜ˆå€¼
 	CString dirPath = GetExePath();
 	CString inipath = dirPath + "\\MyFanconfig.ini";
 	//int battery_percent = GetBatteryLevel();
@@ -1315,22 +1315,22 @@ void CConfig::LoadDefault()
 	}
 	else
 	{
-		upClockPercent = 94;//Õ¼ÓÃÂÊÉıÆµãĞÖµ
-		downClockPercent = 88;//Õ¼ÓÃÂÊ½µÆµãĞÖµ
-		downTemplimit = 80;//ÎÂ¿Ø½µÆµãĞÖµ
-		upTemplimit = 79;//ÎÂ¿ØÉıÆµãĞÖµ
-		upClocklimit = 1600; //ÉıÆµÉÏÏŞ
-		timelimit = 3;    //Í³¼ÆÊ±³¤
-		CurveUV_limit = 690; //Curve±£»¤
-		OverClock2 = 145; //Curve±£»¤145Mhz
+		upClockPercent = 94;//å ç”¨ç‡å‡é¢‘é˜ˆå€¼
+		downClockPercent = 88;//å ç”¨ç‡é™é¢‘é˜ˆå€¼
+		downTemplimit = 80;//æ¸©æ§é™é¢‘é˜ˆå€¼
+		upTemplimit = 79;//æ¸©æ§å‡é¢‘é˜ˆå€¼
+		upClocklimit = 1600; //å‡é¢‘ä¸Šé™
+		timelimit = 3;    //ç»Ÿè®¡æ—¶é•¿
+		CurveUV_limit = 690; //Curveä¿æŠ¤
+		OverClock2 = 145; //Curveä¿æŠ¤145Mhz
 		UpdateInterval = 2;
 	}
 
 	int i = 0;
-	DutyList[0][i++] = upClockPercent;//90+  //Õ¼ÓÃÂÊÉıÆµãĞÖµ
-	DutyList[0][i++] = downClockPercent;//85+	//½µÆµãĞÖµ
-	DutyList[0][i++] = downTemplimit;//80+	//ÎÂ¿Ø½µÆµãĞÖµ
-	DutyList[0][i++] = upTemplimit;//75+	//ÎÂ¿ØÉıÆµãĞÖµ
+	DutyList[0][i++] = upClockPercent;//90+  //å ç”¨ç‡å‡é¢‘é˜ˆå€¼
+	DutyList[0][i++] = downClockPercent;//85+	//é™é¢‘é˜ˆå€¼
+	DutyList[0][i++] = downTemplimit;//80+	//æ¸©æ§é™é¢‘é˜ˆå€¼
+	DutyList[0][i++] = upTemplimit;//75+	//æ¸©æ§å‡é¢‘é˜ˆå€¼
 	DutyList[0][i++] = upClocklimit;//70+
 	DutyList[0][i++] = timelimit;//65+
 	DutyList[0][i++] = CurveUV_limit;//780mv
@@ -1368,7 +1368,7 @@ void CConfig::LoadConfig()
 		SaveConfig();
 		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
 		{
-			AfxMessageBox("ÎŞ·¨ÔØÈëÅäÖÃÎÄ¼ş");
+			AfxMessageBox("æ— æ³•è½½å…¥é…ç½®æ–‡ä»¶");
 			return;
 		}
 	}
@@ -1378,12 +1378,12 @@ void CConfig::LoadConfig()
 		SaveConfig();
 		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
 		{
-			AfxMessageBox("ÖØÖÃºóÈÔÈ»ÎŞ·¨ÔØÈëÅäÖÃÎÄ¼ş");
+			AfxMessageBox("é‡ç½®åä»ç„¶æ— æ³•è½½å…¥é…ç½®æ–‡ä»¶");
 			return;
 		}
 		if (file.GetLength() != sizeof(*this))
 		{
-			AfxMessageBox("ÅäÖÃÎÄ¼ş¸ñÊ½²»ÕıÈ·");
+			AfxMessageBox("é…ç½®æ–‡ä»¶æ ¼å¼ä¸æ­£ç¡®");
 			file.Close();
 			return;
 		}
@@ -1398,7 +1398,7 @@ void CConfig::SaveConfig()
 	fp = fopen(strPath, "wb");
 	if (fp == NULL)
 	{
-		AfxMessageBox("ÎŞ·¨±£´æÅäÖÃÎÄ¼ş");
+		AfxMessageBox("æ— æ³•ä¿å­˜é…ç½®æ–‡ä»¶");
 		return;
 	}
 	fwrite(this, sizeof(*this), 1, fp);
@@ -1427,14 +1427,14 @@ CCore::CCore()
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_nCurTemp[i]=0;//µ±Ç°ÎÂ¶È
-		m_nLastTemp[i]=0;//ÉÏÒ»´ÎÎÂ¶È
-		m_nSetDuty[i]=0;//ÉèÖÃµÄ¸ºÔØ
-		m_nSetDutyLevel[i] = 0;//ÉèÖÃµÄ×ªËÙµ²Î»£¬×îµÍËÙµµÎª1£¬×î¸ßËÙµµÎª10
-		m_nCurDuty[i]=0;//µ±Ç°¸ºÔØ
-		m_nCurRPM[i]=0;//µ±Ç°×ªËÙ
+		m_nCurTemp[i]=0;//å½“å‰æ¸©åº¦
+		m_nLastTemp[i]=0;//ä¸Šä¸€æ¬¡æ¸©åº¦
+		m_nSetDuty[i]=0;//è®¾ç½®çš„è´Ÿè½½
+		m_nSetDutyLevel[i] = 0;//è®¾ç½®çš„è½¬é€ŸæŒ¡ä½ï¼Œæœ€ä½é€Ÿæ¡£ä¸º1ï¼Œæœ€é«˜é€Ÿæ¡£ä¸º10
+		m_nCurDuty[i]=0;//å½“å‰è´Ÿè½½
+		m_nCurRPM[i]=0;//å½“å‰è½¬é€Ÿ
 	}
-	m_bUpdateRPM=0;//ÊÇ·ñ¸üĞÂ×ªËÙ£¬Èç¹ûÎª0£¬Ö»¸üĞÂ·çÉÈÎÂ¶ÈºÍ¸ºÔØ
+	m_bUpdateRPM=0;//æ˜¯å¦æ›´æ–°è½¬é€Ÿï¼Œå¦‚æœä¸º0ï¼Œåªæ›´æ–°é£æ‰‡æ¸©åº¦å’Œè´Ÿè½½
 	m_nLastUpdateTime = GetTime(0, -5);
 	m_TakeOverTimeOut = 1;
 	m_bForcedCooling = FALSE;
@@ -1457,7 +1457,7 @@ BOOL CCore::Init()
 		return TRUE;
 	}
 
-	TRACE0("ÄÚºË¿ªÊ¼³õÊ¼»¯¡£\n");
+	TRACE0("å†…æ ¸å¼€å§‹åˆå§‹åŒ–ã€‚\n");
 	m_nInit = -1;
 	//
 	//CString dllpth = GetExePath() + "\\ClevoEcInfo.dll";
@@ -1465,7 +1465,7 @@ BOOL CCore::Init()
 	//m_hInstDLL = LoadLibrary(dllpth);
 	//if (m_hInstDLL == NULL)
 	//{
-	//	AfxMessageBox("ÎŞ·¨¼ÓÔØ" + dllpth + "£¬ÇëÈ·±£¸ÃÎÄ¼şÔÚ³ÌĞòÄ¿Â¼ÏÂ£¬²¢ÇÒÒÑ°²×°NTPortDrv¡£");
+	//	AfxMessageBox("æ— æ³•åŠ è½½" + dllpth + "ï¼Œè¯·ç¡®ä¿è¯¥æ–‡ä»¶åœ¨ç¨‹åºç›®å½•ä¸‹ï¼Œå¹¶ä¸”å·²å®‰è£…NTPortDrvã€‚");
 	//	return FALSE;
 	//}
 
@@ -1485,7 +1485,7 @@ BOOL CCore::Init()
 	//{
 	//	FreeLibrary(m_hInstDLL);
 	//	m_hInstDLL = NULL;
-	//	AfxMessageBox("´íÎóµÄClevoEcInfo.dll");
+	//	AfxMessageBox("é”™è¯¯çš„ClevoEcInfo.dll");
 	//	return FALSE;
 	//}
 
@@ -1493,7 +1493,7 @@ BOOL CCore::Init()
 	//{
 	//	FreeLibrary(m_hInstDLL);
 	//	m_hInstDLL = NULL;
-	//	AfxMessageBox("½Ó¿Ú³õÊ¼»¯·µ»ØÖµ´íÎó£¡");
+	//	AfxMessageBox("æ¥å£åˆå§‹åŒ–è¿”å›å€¼é”™è¯¯ï¼");
 	//	return FALSE;
 	//}
 
@@ -1510,7 +1510,7 @@ BOOL CCore::Init()
 	m_pfnSetFANDutyAuto(2);
 	*/
 	//
-	TRACE0("ÄÚºË³õÊ¼»¯³É¹¦¡£\n");
+	TRACE0("å†…æ ¸åˆå§‹åŒ–æˆåŠŸã€‚\n");
 	m_nInit = 1;
 	return TRUE;
 }
@@ -1614,14 +1614,14 @@ void CCore::Run()
 
 	if (m_nInit == 1)
 	{
-		TRACE0("ÄÚºË¿ªÊ¼ÔËĞĞ¡£\n");
+		TRACE0("å†…æ ¸å¼€å§‹è¿è¡Œã€‚\n");
 		int curtime;
 		while (!m_nExit)
 		{
 			curtime = GetTime();
 			if (curtime >= nNextChecktTime || m_bForcedRefresh)
 			{
-				//MessageBox(NULL , "¹¤×÷ÖĞ...", "MyFunColtrol" , 0);
+				//MessageBox(NULL , "å·¥ä½œä¸­...", "MyFunColtrol" , 0);
 				if (m_ApmPowerStatusChange == 1)
 				{
 					int battery_ACLine = GetBatteryACLineStatus();
@@ -1677,25 +1677,25 @@ void CCore::Run()
 				}
 
 				Work();
-				m_nLastUpdateTime = curtime;//¸üĞÂÊ±¼ä
-				nNextChecktTime = GetTime(NULL, m_config.UpdateInterval);//ÏÂÒ»¸ö¸üĞÂÊ±¼ä
+				m_nLastUpdateTime = curtime;//æ›´æ–°æ—¶é—´
+				nNextChecktTime = GetTime(NULL, m_config.UpdateInterval);//ä¸‹ä¸€ä¸ªæ›´æ–°æ—¶é—´
 				m_bForcedRefresh = FALSE;
 				if (!bSetPriority)
 				{
 					bSetPriority = TRUE;
-					SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);//ÔÚÊ×´Î¸üĞÂ³É¹¦ºó²ÅÉèÖÃ¸ßÓÅÏÈ¼¶
+					SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);//åœ¨é¦–æ¬¡æ›´æ–°æˆåŠŸåæ‰è®¾ç½®é«˜ä¼˜å…ˆçº§
 				}
 			}
 			Sleep(1000);
 		}
-		TRACE0("ÄÚºË½áÊøÔËĞĞ¡£\n");
+		TRACE0("å†…æ ¸ç»“æŸè¿è¡Œã€‚\n");
 	}
 	m_nExit = 2;
 }
 void CCore::Work()
 {
 	//Update();
-	//if (m_bForcedCooling)//Ç¿ÖÆÀäÈ´
+	//if (m_bForcedCooling)//å¼ºåˆ¶å†·å´
 	//{
 	//	if (m_nCurTemp[0] >= m_config.ForceTemp || m_nCurTemp[1] >= m_config.ForceTemp)
 	//	{
@@ -1723,7 +1723,7 @@ void CCore::Work()
 	else
 		Sleep(500);
 
-	//Ëø¶¨GPUÆµÂÊ
+	//é”å®šGPUé¢‘ç‡
 	int limitClock = 0;
 	int limitTime = m_config.timelimit;
 	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
@@ -1735,24 +1735,24 @@ void CCore::Work()
 	int resultLog = -1;
 	int baseMemClock = 6000;
 	int nGPU_Util_limit = 55;
-	//m_core.m_config.Linear ÏßĞÔ¿ØÖÆ
-	int count_time = limitTime * m_config.UpdateInterval; //Ê¹ÓÃÖÜÆÚ*Ê±¼äÍ³¼Æ
+	//m_core.m_config.Linear çº¿æ€§æ§åˆ¶
+	int count_time = limitTime * m_config.UpdateInterval; //ä½¿ç”¨å‘¨æœŸ*æ—¶é—´ç»Ÿè®¡
 
 	if (m_config.TakeOver)
 	{
 		if (m_TakeOverTimeOut == 0)
-			m_TakeOverTimeOut = GetTime(NULL, count_time * 2);//ÏÂÒ»¸ö³¬Ê±
+			m_TakeOverTimeOut = GetTime(NULL, count_time * 2);//ä¸‹ä¸€ä¸ªè¶…æ—¶
 		//if (m_GpuInfo.m_nGPU_Temp < m_config.downTemplimit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
 		if (m_GpuInfo.m_nGPU_Util > nGPU_Util_limit && m_GpuInfo.m_nGPU_Util < m_config.downClockPercent && m_GpuInfo.m_nGraphicsClock > baseClockLimit)
 		{
-			//Õ¼ÓÃÂÊ<88
+			//å ç”¨ç‡<88
 			//m_GpuInfo.m_nGPU_UtilCount += m_GpuInfo.m_nGPU_Util;
 			m_config.TakeOverDown += 1;
 			int takeOvercurtime = GetTime();
 			if (m_config.TakeOverDown >= limitTime || (takeOvercurtime > m_TakeOverTimeOut && m_config.TakeOverUp == 0 && m_config.TakeOverDown >= int(limitTime/2)) )
 			{
-				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //½µÆµÎªÕ¼ÓÃÂÊÉÏÏŞ
-				limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);  //½µÆµ0.95
+				//limitClock = int(m_GpuInfo.m_nGraphicsClock * int(m_GpuInfo.m_nGPU_UtilCount /(m_config.TakeOverDown - 1)) / 100); //é™é¢‘ä¸ºå ç”¨ç‡ä¸Šé™
+				limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);  //é™é¢‘0.95
 
 				if (limitClock >= baseClockLimit)
 				{
@@ -1768,11 +1768,11 @@ void CCore::Work()
 		else
 		{
 			//if (m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit && m_config.LockGPUFrequency > 0 && m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock > m_GpuInfo.m_nBaseClock)
-			if (m_GpuInfo.m_nGPU_Temp >= m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //ÅĞ¶Ïµ±Ç°ÎÂ¶ÈĞ¡ÓÚ¼«ÏŞÎÂ¶È85¶È > 75
+			if (m_GpuInfo.m_nGPU_Temp >= m_config.downTemplimit && m_GpuInfo.m_nGraphicsClock > baseClockLimit)   //åˆ¤æ–­å½“å‰æ¸©åº¦å°äºæé™æ¸©åº¦85åº¦ > 75
 			{
 				//else
 				//{
-				//	m_config.LockGPUFrequency = 1;  //ÎÂ¶È¹ı¸ßºó½µÆµËø¶¨
+				//	m_config.LockGPUFrequency = 1;  //æ¸©åº¦è¿‡é«˜åé™é¢‘é”å®š
 				//	limitClock = int(m_GpuInfo.m_nGraphicsClock * 0.95);
 				//}
 				limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);
@@ -1781,7 +1781,7 @@ void CCore::Work()
 				{
 					limitClock = baseClockLimit;
 				}
-				m_config.LockGPUFrequency = 1;  //ÎÂ¶È¹ı¸ßºó½µÆµËø¶¨
+				m_config.LockGPUFrequency = 1;  //æ¸©åº¦è¿‡é«˜åé™é¢‘é”å®š
 				m_config.GPUFrequency = limitClock;
 
 				m_config.TakeOverUp = 0;
@@ -1792,39 +1792,39 @@ void CCore::Work()
 			else
 			{
 				if (m_config.LockGPUFrequency ^ 0)
-					//Ëø¶¨Çé¿öÏÂ
+					//é”å®šæƒ…å†µä¸‹
 				{
 					//if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= baseClockLimit)
-					//	//Õ¼ÓÃÂÊ³ÖĞø´óÓÚ97ºóÉıÆµand ÆµÂÊ¸ßÓÚ1080
+					//	//å ç”¨ç‡æŒç»­å¤§äº97åå‡é¢‘and é¢‘ç‡é«˜äº1080
 					if (m_GpuInfo.m_nGPU_Util > m_config.upClockPercent && m_GpuInfo.m_nGraphicsClock >= lowClockLimit)
-						//Õ¼ÓÃÂÊ³ÖĞø´óÓÚ97ºóÉıÆµand  ÆµÂÊ¸ßÓÚ lowClockLimit 600
+						//å ç”¨ç‡æŒç»­å¤§äº97åå‡é¢‘and  é¢‘ç‡é«˜äº lowClockLimit 600
 					{
 						m_config.TakeOverUp += 1;
-						//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//Ê¹ÓÃÖÜÆÚ*Ê±¼äÍ³¼Æ
+						//int count_time = m_config.TakeOverUp * m_config.UpdateInterval;//ä½¿ç”¨å‘¨æœŸ*æ—¶é—´ç»Ÿè®¡
 
 
-						//limitClock = m_GpuInfo.m_nGraphicsClock //¶¯Ì¬³¬Æµ
+						//limitClock = m_GpuInfo.m_nGraphicsClock //åŠ¨æ€è¶…é¢‘
 						int takeOvercurtime = GetTime();
 						if (m_config.TakeOverUp >= limitTime || (takeOvercurtime > m_TakeOverTimeOut &&  m_config.TakeOverDown==0 && m_config.TakeOverUp >= int(limitTime / 2)) )
 						{
-							if (m_GpuInfo.m_nGPU_Util >= m_config.downClockPercent && m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit - 10)  //Õ¼ÓÃÂÊ´óÓÚ70 ÇĞµ±Ç°ÎÂ¶ÈĞ¡ÓÚÉıÆµÎÂ¶È-10¶È 
+							if (m_GpuInfo.m_nGPU_Util >= m_config.downClockPercent && m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit - 10)  //å ç”¨ç‡å¤§äº70 åˆ‡å½“å‰æ¸©åº¦å°äºå‡é¢‘æ¸©åº¦-10åº¦ 
 							{
 								limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.10);
 								//limitClock = 0;
 								//limitClock = m_config.GPU_LockClock;				//default LockClock bug 630 set 0
 							}
 
-							else if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //ÅĞ¶Ïµ±Ç°ÎÂ¶ÈĞ¡ÓÚÉıÆµÎÂ¶È75¶È 
+							else if (m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit)  //åˆ¤æ–­å½“å‰æ¸©åº¦å°äºå‡é¢‘æ¸©åº¦75åº¦ 
 							{
 								limitClock = int(m_GpuInfo.m_nGraphicsClock * upClockRatio);
 							}
-							else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //ÅĞ¶Ïµ±Ç°ÎÂ¶È´óÓÚÉıÆµÎÂ¶È75¶È Ğ¡ÓÚ82Î¬³Ö²»±ä
+							else if (m_GpuInfo.m_nGPU_Temp > m_config.upTemplimit && m_GpuInfo.m_nGPU_Temp <= m_config.downTemplimit)  //åˆ¤æ–­å½“å‰æ¸©åº¦å¤§äºå‡é¢‘æ¸©åº¦75åº¦ å°äº82ç»´æŒä¸å˜
 							{
 								limitClock = m_GpuInfo.m_nGraphicsClock;
 							}
 							else
 							{
-								limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);  //ËøÆµºóÎÂ¶È¸ßÓÚ82½µÆµ
+								limitClock = int(m_GpuInfo.m_nGraphicsClock * downClockRatio);  //é”é¢‘åæ¸©åº¦é«˜äº82é™é¢‘
 								if (limitClock < baseClockLimit)
 								{
 									limitClock = baseClockLimit;
@@ -1842,11 +1842,11 @@ void CCore::Work()
 							}
 							else
 							{
-								if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,ÎÂ¶ÈĞ¡ÓÚ75·Å¿ªËø¶¨
+								if (limitClock >= m_config.upClocklimit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)  //limitClock > 1600 ,æ¸©åº¦å°äº75æ”¾å¼€é”å®š
 								{
 									//m_config.LockGPUFrequency = 0;
 									//bug when limitClock == upClocklimit will to LockClock
-									//m_config.GPUFrequency = m_config.GPU_LockClock;  //»Ö¸´init LockClock BUG
+									//m_config.GPUFrequency = m_config.GPU_LockClock;  //æ¢å¤init LockClock BUG
 									m_config.GPUFrequency = m_config.upClocklimit;   //set GPU to upClocklimit
 								}
 							}
@@ -1859,15 +1859,15 @@ void CCore::Work()
 					else
 					{
 						if (m_GpuInfo.m_nGPU_Util < nGPU_Util_limit && m_GpuInfo.m_nGPU_Temp < m_config.upTemplimit)
-							//Ëø¶¨Çé¿ö Util <35 and ÎÂ¶ÈĞ¡ÓÚÏŞÎÂ ·Å¿ªËø¶¨ 
+							//é”å®šæƒ…å†µ Util <35 and æ¸©åº¦å°äºé™æ¸© æ”¾å¼€é”å®š 
 						{
 							m_config.TakeOverLock += 1;
 							if (m_config.TakeOverLock >= limitTime)
-								//¼ÆÊıTimes
+								//è®¡æ•°Times
 							{
-								//m_config.LockGPUFrequency = 0;  //ÏĞÖÃ¿ÕÏĞµÍÎÂºó·Å¿ªËø¶¨
+								//m_config.LockGPUFrequency = 0;  //é—²ç½®ç©ºé—²ä½æ¸©åæ”¾å¼€é”å®š
 								//m_config.GPUFrequency = 0;
-								m_config.GPUFrequency = m_config.GPU_LockClock;  //»Ö¸´init LockClock 0216 690MHz bug?
+								m_config.GPUFrequency = m_config.GPU_LockClock;  //æ¢å¤init LockClock 0216 690MHz bug?
 								m_config.TakeOverUp = 0;
 								m_config.TakeOverDown = 0;
 								m_config.TakeOverLock = 0;
@@ -1970,7 +1970,7 @@ void CCore::Work()
 								if (m_TakeOverTimeOut == 0)
 								{
 									LOG(resultLog = m_TakeOverTimeOut);
-									//m_TakeOverTimeOut = GetTime(NULL, 30);//ÏÂÒ»¸ö³¬Ê±
+									//m_TakeOverTimeOut = GetTime(NULL, 30);//ä¸‹ä¸€ä¸ªè¶…æ—¶
 								}
 								//LOG(resultLog = freq_over_clock);
 								//LOG(resultLog = m_config.GPUOverClock);
@@ -2044,20 +2044,20 @@ void CCore::Update()
 		data = m_pfnGetTempFanDuty(i+1);
 		if (abs(data.Remote - this->m_nCurTemp[i]) > 30)
 		{
-			//AfxMessageBox("»ñÈ¡ÎÂ¶ÈÓĞÎó");
-			//ÎÂ¶È»ñÈ¡¿ÉÄÜÓĞÎó£¬ÖØÊÔÒ»´Î
+			//AfxMessageBox("è·å–æ¸©åº¦æœ‰è¯¯");
+			//æ¸©åº¦è·å–å¯èƒ½æœ‰è¯¯ï¼Œé‡è¯•ä¸€æ¬¡
 			if (TempErr++ == 0)
 			{
 				Sleep(1000);
 				i--;
-				continue;//ÖØÊÔÒ»´Î
+				continue;//é‡è¯•ä¸€æ¬¡
 			}
 		}
 		this->m_nLastTemp[i] = this->m_nCurTemp[i];
 		this->m_nCurTemp[i] = data.Remote;
 		this->m_nCurDuty[i] = int(data.FanDuty * 100 / 255.0 + 0.5);
 
-		if (m_bUpdateRPM)//»ñÈ¡·çÉÈ×ªËÙ
+		if (m_bUpdateRPM)//è·å–é£æ‰‡è½¬é€Ÿ
 		{
 			int val = m_pfnGetFANRPM[i]();
 			if (val == 0)
@@ -2080,22 +2080,22 @@ void CCore::Control()
 		CalcLinearDuty();
 	else
 		CalcStdDuty();
-	//Éè¶¨×ªËÙ
+	//è®¾å®šè½¬é€Ÿ
 	SetFanDuty();
 
 }
 void CCore::CalcLinearDuty()
 {
-	static int nLastTemp[2] = { 0, 0 };//Ã¿´ÎÓÃÓÚ¼ÆËã×ªËÙµÄÎÂ¶È
+	static int nLastTemp[2] = { 0, 0 };//æ¯æ¬¡ç”¨äºè®¡ç®—è½¬é€Ÿçš„æ¸©åº¦
 
 	//int duty,dl;
 	//int j;
 	//for (int i = 0; i < 2; i++)
 	//{
-	//	nLastTemp[i] = max(nLastTemp[i], m_nCurTemp[i]);//ÎÂ¶ÈÉÏÉıÊ±Á¢¿ÌÒÔµ±Ç°ÎÂ¶È¼ÆËã×ªËÙ
-	//	nLastTemp[i] = min(nLastTemp[i], m_nCurTemp[i] + m_config.TransitionTemp);//ÎÂ¶ÈÏÂ½µÊ±ÒÔµ±Ç°ÎÂ¶È+¹ı¶ÉÎÂ¶ÈÀ´¼ÆËã×ªËÙ
+	//	nLastTemp[i] = max(nLastTemp[i], m_nCurTemp[i]);//æ¸©åº¦ä¸Šå‡æ—¶ç«‹åˆ»ä»¥å½“å‰æ¸©åº¦è®¡ç®—è½¬é€Ÿ
+	//	nLastTemp[i] = min(nLastTemp[i], m_nCurTemp[i] + m_config.TransitionTemp);//æ¸©åº¦ä¸‹é™æ—¶ä»¥å½“å‰æ¸©åº¦+è¿‡æ¸¡æ¸©åº¦æ¥è®¡ç®—è½¬é€Ÿ
 
-	//	j = nLastTemp[i];//¼ÆËã×ªËÙÊ¹ÓÃµÄÎÂ¶È
+	//	j = nLastTemp[i];//è®¡ç®—è½¬é€Ÿä½¿ç”¨çš„æ¸©åº¦
 
 	//	if (j < 45)
 	//	{
@@ -2148,7 +2148,7 @@ void CCore::CalcStdDuty()
 	for (int i = 0; i < 2; i++)
 	{
 		j = m_nCurTemp[i];
-		last_dl = m_nSetDutyLevel[i];//ÉÏÒ»´ÎµÄ¸ºÔØµÈ¼¶
+		last_dl = m_nSetDutyLevel[i];//ä¸Šä¸€æ¬¡çš„è´Ÿè½½ç­‰çº§
 		for (k = 0; k < 10; k++)
 		{
 			dl = 10 - k;
@@ -2162,7 +2162,7 @@ void CCore::CalcStdDuty()
 			}
 			else
 			{
-				//¸ù¾İÉÏÒ»´ÎµÄ¸ºÔØµ²Î»¾ö¶¨
+				//æ ¹æ®ä¸Šä¸€æ¬¡çš„è´Ÿè½½æŒ¡ä½å†³å®š
 				if (last_dl >= dl)
 				{
 					break;
@@ -2193,7 +2193,7 @@ void CCore::ResetFan()
 void CCore::ResetGPUFrequancy()
 {
 	m_GpuInfo.ForcedRefreshGPU = 1;
-	//¼ì²âÇúÏß±ä»¯
+	//æ£€æµ‹æ›²çº¿å˜åŒ–
 	//m_config.GPU_LockClock = m_config.GPUFrequency;
 	m_start_overclock = 0;
 
@@ -2220,7 +2220,7 @@ void CCore::SetFanDuty()
 		duty = int(m_nSetDuty[i] * 255.0 / 100 + 0.5);
 		m_pfnSetFanDuty(i + 1, duty);
 		if (i == 1)
-			m_pfnSetFanDuty(i + 2, duty);//Èç¹û´æÔÚµÚ3¸ö·çÉÈ
+			m_pfnSetFanDuty(i + 2, duty);//å¦‚æœå­˜åœ¨ç¬¬3ä¸ªé£æ‰‡
 	}
 	m_bTakeOverStatus = TRUE;
 }
