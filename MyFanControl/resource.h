@@ -44,6 +44,10 @@
 #define IDC_CHECK_LOCK_GPU_FREQUANCY    1034
 #define IDC_EDIT_FORCE_TEMP2            1035
 #define IDC_EDIT_GPU_FREQUENCY          1035
+#define IDR_PROFILE_LOAD_BASE           2000
+#define IDR_PROFILE_DELETE_BASE         3000
+#define IDR_PROFILE_SAVE                4000
+
 
 // Next default values for new objects
 // 

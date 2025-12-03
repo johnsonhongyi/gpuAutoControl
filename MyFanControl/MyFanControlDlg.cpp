@@ -224,6 +224,9 @@ BEGIN_MESSAGE_MAP(CMyFanControlDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT_GPU11, &CMyFanControlDlg::OnEnChangeEditGpu11)
 	ON_BN_CLICKED(IDOK, &CMyFanControlDlg::OnBnClickedOk)
 	ON_MESSAGE(WM_POWERBROADCAST, OnPowerBroadcast)
+	ON_COMMAND_RANGE(IDR_PROFILE_LOAD_BASE, IDR_PROFILE_LOAD_BASE + 100, &CMyFanControlDlg::OnProfileLoad)
+	ON_COMMAND_RANGE(IDR_PROFILE_DELETE_BASE, IDR_PROFILE_DELETE_BASE + 100, &CMyFanControlDlg::OnProfileDelete)
+	ON_COMMAND(IDR_PROFILE_SAVE, &CMyFanControlDlg::OnProfileSave)
 
 END_MESSAGE_MAP()
 
@@ -964,11 +967,15 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		CMenu menu;
 		menu.CreatePopupMenu();
 		if (m_bWindowVisible)
-			menu.AppendMenu(MFT_STRING, IDR_SHOW, "隐藏");
+			menu.AppendMenu(MF_STRING, IDR_SHOW, "隐藏");
 		else
-			menu.AppendMenu(MFT_STRING, IDR_SHOW, "显示");
-		menu.AppendMenu(MFT_SEPARATOR);
-		menu.AppendMenu(MFT_STRING, IDR_EXIT, "退出");
+			menu.AppendMenu(MF_STRING, IDR_SHOW, "显示");
+		
+		// Add Profile Submenu
+		AppendProfileMenu(&menu);
+		
+		menu.AppendMenu(MF_SEPARATOR);
+		menu.AppendMenu(MF_STRING, IDR_EXIT, "退出");
 		SetForegroundWindow();//不加此行在菜单外点击菜单不销毁
 		int xx = TrackPopupMenu(menu, TPM_RETURNCMD, lpoint->x, lpoint->y, NULL, this->m_hWnd, NULL);//显示菜单并获取选项ID
 		if (xx == IDR_SHOW)
@@ -979,6 +986,18 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		else if (xx == IDR_EXIT)
 		{
 			OnOK();
+		}
+		else if (xx == IDR_PROFILE_SAVE)
+		{
+			OnProfileSave();
+		}
+		else if (xx >= IDR_PROFILE_LOAD_BASE && xx < IDR_PROFILE_LOAD_BASE + 100)
+		{
+			OnProfileLoad(xx);
+		}
+		else if (xx >= IDR_PROFILE_DELETE_BASE && xx < IDR_PROFILE_DELETE_BASE + 100)
+		{
+			OnProfileDelete(xx);
 		}
 		HMENU hmenu = menu.Detach();
 		menu.DestroyMenu();
@@ -994,16 +1013,132 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		static int LastUpdate = -1;
 		if (LastUpdate != m_core.m_nLastUpdateTime)
 		{
-			char str[128];
-			//sprintf_s(str, 128, "CPU：%d℃，%d%%\nGPU：%d℃，%d%%", m_core.m_nCurTemp[0], m_core.m_nCurDuty[0], m_core.m_nCurTemp[1], m_core.m_nCurDuty[1]);
-			sprintf_s(str, 128, "GPU：%dM  +%d\nGMem：%dM +%d\nGTemp: %d", m_core.m_GpuInfo.m_nGraphicsClock, m_core.m_config.GPUOverClock, m_core.m_GpuInfo.m_nMemoryClock, m_core.m_config.GPUOverMEMClock, m_core.m_GpuInfo.m_nGPU_Temp);
-			SetTray(str);
+			//char str[256];
+			////sprintf_s(str, 128, "CPU：%d℃，%d%%\nGPU：%d℃，%d%%", m_core.m_nCurTemp[0], m_core.m_nCurDuty[0], m_core.m_nCurTemp[1], m_core.m_nCurDuty[1]);
+			//CString profileInfo = m_core.m_config.m_sCurrentProfile.IsEmpty() ? "" : ("\nProfile: " + m_core.m_config.m_sCurrentProfile);
+			//sprintf_s(str, 256, "GPU：%dM  +%d\nGMem：%dM +%d\nGTemp: %d%s", m_core.m_GpuInfo.m_nGraphicsClock, m_core.m_config.GPUOverClock, m_core.m_GpuInfo.m_nMemoryClock, m_core.m_config.GPUOverMEMClock, m_core.m_GpuInfo.m_nGPU_Temp, (LPCSTR)profileInfo);
+			//SetTray(str);
+			//LastUpdate = m_core.m_nLastUpdateTime;
+			// 移除 sprintf_s 调用，直接构建一个大的 CString
+			CString trayMessage;
+
+			// 使用 Format 函数组合所有信息，注意使用 %d 来格式化整数
+			trayMessage.Format(_T("GPU：%dM  +%d\nGMem：%dM +%d\nGTemp: %d"),
+				m_core.m_GpuInfo.m_nGraphicsClock,
+				m_core.m_config.GPUOverClock,
+				m_core.m_GpuInfo.m_nMemoryClock,
+				m_core.m_config.GPUOverMEMClock,
+				m_core.m_GpuInfo.m_nGPU_Temp);
+
+			// 将 Profile 信息附加到末尾
+			if (!m_core.m_config.m_sCurrentProfile.IsEmpty()) {
+				trayMessage += "\nProfile: ";
+				trayMessage += m_core.m_config.m_sCurrentProfile;
+			}
+
+			// SetTray 函数可能需要一个 CString 或 LPCWSTR/LPCSTR
+			SetTray(trayMessage);
 			LastUpdate = m_core.m_nLastUpdateTime;
+
 		}
 
 	}break;
 	}
 	return 0;
+}
+
+void CMyFanControlDlg::AppendProfileMenu(CMenu* pMenu)
+{
+	CMenu profileMenu;
+	profileMenu.CreatePopupMenu();
+	
+	CStringArray profiles;
+	m_core.m_config.GetProfileList(profiles);
+	
+	// Load Profile items
+	if(profiles.GetSize() > 0)
+	{
+		for(int i=0; i<profiles.GetSize(); i++)
+		{
+			UINT flags = MF_STRING;
+			if(m_core.m_config.m_sCurrentProfile == profiles[i])
+				flags |= MF_CHECKED;
+			profileMenu.AppendMenu(flags, IDR_PROFILE_LOAD_BASE + i, profiles[i]);
+		}
+		profileMenu.AppendMenu(MF_SEPARATOR);
+	}
+	
+	profileMenu.AppendMenu(MF_STRING, IDR_PROFILE_SAVE, "保存当前配置...");
+	
+	// Delete Profile Submenu
+	if(profiles.GetSize() > 0)
+	{
+		CMenu deleteMenu;
+		deleteMenu.CreatePopupMenu();
+		for(int i=0; i<profiles.GetSize(); i++)
+		{
+			deleteMenu.AppendMenu(MF_STRING, IDR_PROFILE_DELETE_BASE + i, profiles[i]);
+		}
+		profileMenu.AppendMenu(MF_POPUP, (UINT_PTR)deleteMenu.m_hMenu, "删除配置");
+		deleteMenu.Detach(); // Detach so it's owned by profileMenu
+	}
+	
+	pMenu->AppendMenu(MF_POPUP, (UINT_PTR)profileMenu.m_hMenu, "配置文件");
+	profileMenu.Detach(); // Detach so it's owned by pMenu
+}
+
+void CMyFanControlDlg::OnProfileSave()
+{
+	CFileDialog dlg(FALSE, "ini", NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, "Profile Files (*.ini)|*.ini||", this);
+	CString profilesDir = m_core.m_config.GetProfilePath("").Left(m_core.m_config.GetProfilePath("").ReverseFind('\\'));
+	dlg.m_ofn.lpstrInitialDir = profilesDir;
+	dlg.m_ofn.lpstrTitle = "保存配置文件 (请输入文件名作为配置名称)";
+	
+	if (dlg.DoModal() == IDOK)
+	{
+		CString fileName = dlg.GetFileName();
+		
+		// Remove extension
+		int dotPos = fileName.ReverseFind('.');
+		if (dotPos != -1)
+			fileName = fileName.Left(dotPos);
+			
+		// Remove "profile_" prefix if present
+		if (fileName.GetLength() >= 8 && fileName.Left(8).CompareNoCase("profile_") == 0)
+		{
+			fileName = fileName.Mid(8);
+		}
+
+		m_core.m_config.SaveProfile(fileName);
+		AfxMessageBox("配置已保存: " + fileName);
+	}
+}
+
+void CMyFanControlDlg::OnProfileLoad(UINT nID)
+{
+	int index = nID - IDR_PROFILE_LOAD_BASE;
+	CStringArray profiles;
+	m_core.m_config.GetProfileList(profiles);
+	if(index >= 0 && index < profiles.GetSize())
+	{
+		m_core.m_config.LoadProfile(profiles[index]);
+		m_core.ResetGPUFrequancy();
+		UpdateGui(TRUE);
+	}
+}
+
+void CMyFanControlDlg::OnProfileDelete(UINT nID)
+{
+	int index = nID - IDR_PROFILE_DELETE_BASE;
+	CStringArray profiles;
+	m_core.m_config.GetProfileList(profiles);
+	if(index >= 0 && index < profiles.GetSize())
+	{
+		if(AfxMessageBox("确定要删除配置 '" + profiles[index] + "' 吗?", MB_YESNO | MB_ICONQUESTION) == IDYES)
+		{
+			m_core.m_config.DeleteProfile(profiles[index]);
+		}
+	}
 }
 
 // Handle the WM_POWERBROADCAST message to process a message concerning power management

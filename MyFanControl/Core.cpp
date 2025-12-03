@@ -1305,13 +1305,12 @@ void CConfig::LoadDefault()
 		upClocklimit = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "timelimit", 0, returnValue, 100, inipath);
 		timelimit = atoi(returnValue);
-		GetPrivateProfileString("LoadDefault", "UpdateInterval", 0, returnValue, 100, inipath);
+		GetPrivateProfileString("LoadDefault", "UpdateInterval", "5", returnValue, 100, inipath);
 		UpdateInterval = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "CurveUV_limit", 0, returnValue, 100, inipath);
 		CurveUV_limit = atoi(returnValue);
 		GetPrivateProfileString("LoadDefault", "OverClock2", 0, returnValue, 100, inipath);
 		OverClock2 = atoi(returnValue);
-
 	}
 	else
 	{
@@ -1323,7 +1322,7 @@ void CConfig::LoadDefault()
 		timelimit = 3;    //统计时长
 		CurveUV_limit = 690; //Curve保护
 		OverClock2 = 145; //Curve保护145Mhz
-		UpdateInterval = 2;
+		UpdateInterval = 5;
 	}
 
 	int i = 0;
@@ -1357,53 +1356,213 @@ void CConfig::LoadDefault()
 	TakeOverUp = 0;
 	TakeOverLock = 0;
 	GPU_LockClock = 0; //init Lock Clock
+	//m_sCurrentProfile = "";
+	m_sCurrentProfile.Empty();
 
 }
+
+
+///////////////////////////////////////////////////////////////
+// LoadConfig —— 新版（INI格式，安全，不再读取二进制）
+///////////////////////////////////////////////////////////////
 void CConfig::LoadConfig()
 {
-	CString strPath = GetExePath() + "\\MyFanControl.cfg";
-	CFile file;
-	if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
+	CString dirPath = GetExePath();
+	CString inipath = dirPath + "\\MyFanControl.cfg";
+
+	// INI不存在 -> 直接走默认初始化
+	if (!FileExists(inipath))
 	{
-		SaveConfig();
-		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
-		{
-			AfxMessageBox("无法载入配置文件");
-			return;
-		}
-	}
-	if (file.GetLength() != sizeof(*this))
-	{
-		file.Close();
-		SaveConfig();
-		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
-		{
-			AfxMessageBox("重置后仍然无法载入配置文件");
-			return;
-		}
-		if (file.GetLength() != sizeof(*this))
-		{
-			AfxMessageBox("配置文件格式不正确");
-			file.Close();
-			return;
-		}
-	}
-	file.Read(this, sizeof(*this));
-	file.Close();
-}
-void CConfig::SaveConfig()
-{
-	FILE *fp = NULL;
-	CString strPath = GetExePath() + "\\MyFanControl.cfg";
-	fp = fopen(strPath, "wb");
-	if (fp == NULL)
-	{
-		AfxMessageBox("无法保存配置文件");
+		LoadDefault();
+		SaveConfig(); // 顺便写出一份INI
 		return;
 	}
-	fwrite(this, sizeof(*this), 1, fp);
-	fclose(fp);
+
+	char buf[128] = { 0 };
+
+	auto ReadInt = [&](LPCSTR section, LPCSTR key, int def)->int
+	{
+		GetPrivateProfileStringA(section, key, "", buf, sizeof(buf), inipath);
+		if (buf[0] == 0) return def;
+		return atoi(buf);
+	};
+
+	auto ReadBool = [&](LPCSTR section, LPCSTR key, BOOL def)->BOOL
+	{
+		return ReadInt(section, key, def ? 1 : 0) ? TRUE : FALSE;
+	};
+
+	/////////////////////////
+	// 基本参数
+	/////////////////////////
+	UpdateInterval = ReadInt("Config", "UpdateInterval", 5);
+	TransitionTemp = ReadInt("Config", "TransitionTemp", 0);
+	ForceTemp = ReadInt("Config", "ForceTemp", 50);
+
+	Linear = ReadBool("Config", "Linear", FALSE);
+	TakeOver = ReadBool("Config", "TakeOver", FALSE);
+
+	/////////////////////////
+	// GPU
+	/////////////////////////
+	LockGPUFrequency = ReadBool("GPU", "LockGPUFrequency", FALSE);
+	GPUFrequency = ReadInt("GPU", "GPUFrequency", 0);
+	GPUOverClock = ReadInt("GPU", "GPUOverClock", 50);
+	GPUOverMEMClock = ReadInt("GPU", "GPUOverMEMClock", 0);
+
+	/////////////////////////
+	// 动态计数
+	/////////////////////////
+	TakeOverDown = ReadInt("Dynamic", "TakeOverDown", 0);
+	TakeOverUp = ReadInt("Dynamic", "TakeOverUp", 0);
+	TakeOverLock = ReadInt("Dynamic", "TakeOverLock", 0);
+
+	/////////////////////////
+	// 频率温控
+	/////////////////////////
+	upClockPercent = ReadInt("Limit", "upClockPercent", 94);
+	downClockPercent = ReadInt("Limit", "downClockPercent", 88);
+	downTemplimit = ReadInt("Limit", "downTemplimit", 80);
+	upTemplimit = ReadInt("Limit", "upTemplimit", 79);
+	upClocklimit = ReadInt("Limit", "upClocklimit", 1600);
+	timelimit = ReadInt("Limit", "timelimit", 3);
+	CurveUV_limit = ReadInt("Limit", "CurveUV_limit", 690);
+	OverClock2 = ReadInt("Limit", "OverClock2", 145);
+
+	/////////////////////////
+	// DutyList
+	/////////////////////////
+	memset(DutyList, 0, sizeof(DutyList));
+
+	int i = 0;
+	DutyList[0][i++] = upClockPercent;
+	DutyList[0][i++] = downClockPercent;
+	DutyList[0][i++] = downTemplimit;
+	DutyList[0][i++] = upTemplimit;
+	DutyList[0][i++] = upClocklimit;
+	DutyList[0][i++] = timelimit;
+	DutyList[0][i++] = CurveUV_limit;
+	DutyList[0][i++] = OverClock2;
+
+	/////////////////////////
+	// Profile
+	/////////////////////////
+	GetPrivateProfileStringA("Profile", "CurrentProfile", "",
+		buf, sizeof(buf), inipath);
+	m_sCurrentProfile = buf;
 }
+
+
+///////////////////////////////////////////////////////////////
+// SaveConfig —— 新版（INI写盘）
+///////////////////////////////////////////////////////////////
+void CConfig::SaveConfig()
+{
+	CString dirPath = GetExePath();
+	CString inipath = dirPath + "\\MyFanControl.cfg";
+
+	auto WriteInt = [&](LPCSTR sec, LPCSTR key, int v)
+	{
+		char buf[32];
+		_itoa_s(v, buf, 10);
+		WritePrivateProfileStringA(sec, key, buf, inipath);
+	};
+
+	auto WriteBool = [&](LPCSTR sec, LPCSTR key, BOOL v)
+	{
+		WriteInt(sec, key, v ? 1 : 0);
+	};
+
+	/////////////////////////
+	// 基本参数
+	/////////////////////////
+	WriteInt("Config", "UpdateInterval", UpdateInterval);
+	WriteInt("Config", "TransitionTemp", TransitionTemp);
+	WriteInt("Config", "ForceTemp", ForceTemp);
+
+	WriteBool("Config", "Linear", Linear);
+	WriteBool("Config", "TakeOver", TakeOver);
+
+	/////////////////////////
+	// GPU
+	/////////////////////////
+	WriteBool("GPU", "LockGPUFrequency", LockGPUFrequency);
+	WriteInt("GPU", "GPUFrequency", GPUFrequency);
+	WriteInt("GPU", "GPUOverClock", GPUOverClock);
+	WriteInt("GPU", "GPUOverMEMClock", GPUOverMEMClock);
+
+	/////////////////////////
+	// 动态计数
+	/////////////////////////
+	WriteInt("Dynamic", "TakeOverDown", TakeOverDown);
+	WriteInt("Dynamic", "TakeOverUp", TakeOverUp);
+	WriteInt("Dynamic", "TakeOverLock", TakeOverLock);
+
+	/////////////////////////
+	// 温控频率
+	/////////////////////////
+	WriteInt("Limit", "upClockPercent", upClockPercent);
+	WriteInt("Limit", "downClockPercent", downClockPercent);
+	WriteInt("Limit", "downTemplimit", downTemplimit);
+	WriteInt("Limit", "upTemplimit", upTemplimit);
+	WriteInt("Limit", "upClocklimit", upClocklimit);
+	WriteInt("Limit", "timelimit", timelimit);
+	WriteInt("Limit", "CurveUV_limit", CurveUV_limit);
+	WriteInt("Limit", "OverClock2", OverClock2);
+
+	/////////////////////////
+	// Profile
+	/////////////////////////
+	WritePrivateProfileString("Profile", "CurrentProfile",
+		m_sCurrentProfile, inipath);
+}
+
+
+//void CConfig::LoadConfig()
+//{
+//	CString strPath = GetExePath() + "\\MyFanControl.cfg";
+//	CFile file;
+//	if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
+//	{
+//		SaveConfig();
+//		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
+//		{
+//			AfxMessageBox("无法载入配置文件");
+//			return;
+//		}
+//	}
+//	if (file.GetLength() != sizeof(*this))
+//	{
+//		file.Close();
+//		SaveConfig();
+//		if (!file.Open(strPath, CFile::modeRead | CFile::shareDenyNone))
+//		{
+//			AfxMessageBox("重置后仍然无法载入配置文件");
+//			return;
+//		}
+//		if (file.GetLength() != sizeof(*this))
+//		{
+//			AfxMessageBox("配置文件格式不正确");
+//			file.Close();
+//			return;
+//		}
+//	}
+//	file.Read(this, sizeof(*this));
+//	file.Close();
+//}
+//void CConfig::SaveConfig()
+//{
+//	FILE *fp = NULL;
+//	CString strPath = GetExePath() + "\\MyFanControl.cfg";
+//	fp = fopen(strPath, "wb");
+//	if (fp == NULL)
+//	{
+//		AfxMessageBox("无法保存配置文件");
+//		return;
+//	}
+//	fwrite(this, sizeof(*this), 1, fp);
+//	fclose(fp);
+//}
 
 //////////////////////////////////////////////////
 
@@ -2223,4 +2382,139 @@ void CCore::SetFanDuty()
 			m_pfnSetFanDuty(i + 2, duty);//如果存在第3个风扇
 	}
 	m_bTakeOverStatus = TRUE;
+}
+
+// Profile Management Implementation
+
+CString CConfig::GetProfilePath(CString profileName)
+{
+	CString dirPath = GetExePath();
+	CString profilesDir = dirPath + "\\profiles";
+	if (!FileExists(profilesDir))
+	{
+		CreateDirectory(profilesDir, NULL);
+	}
+	return profilesDir + "\\profile_" + profileName + ".ini";
+}
+
+void CConfig::SaveProfile(CString profileName)
+{
+	CString path = GetProfilePath(profileName);
+	CString str;
+	
+	// Save DutyList
+	for(int i=0; i<2; i++) {
+		for(int j=0; j<10; j++) {
+			str.Format("%d", DutyList[i][j]);
+			CString key;
+			key.Format("DutyList_%d_%d", i, j);
+			WritePrivateProfileString("Config", key, str, path);
+		}
+	}
+
+	// Save other fields
+	#define SAVE_INT(x) str.Format("%d", x); WritePrivateProfileString("Config", #x, str, path)
+	#define SAVE_BOOL(x) str.Format("%d", x); WritePrivateProfileString("Config", #x, str, path)
+
+	SAVE_INT(TransitionTemp);
+	SAVE_INT(UpdateInterval);
+	SAVE_BOOL(Linear);
+	SAVE_BOOL(TakeOver);
+	SAVE_INT(ForceTemp);
+	SAVE_BOOL(LockGPUFrequency);
+	SAVE_INT(GPUFrequency);
+	SAVE_INT(GPUOverClock);
+	SAVE_INT(GPUOverMEMClock);
+	SAVE_INT(TakeOverDown);
+	SAVE_INT(TakeOverUp);
+	SAVE_INT(TakeOverLock);
+	SAVE_INT(upClockPercent);
+	SAVE_INT(downClockPercent);
+	SAVE_INT(downTemplimit);
+	SAVE_INT(upTemplimit);
+	SAVE_INT(upClocklimit);
+	SAVE_INT(timelimit);
+	SAVE_INT(GPU_LockClock);
+	SAVE_INT(CurveUV_limit);
+	SAVE_INT(OverClock2);
+	
+	m_sCurrentProfile = profileName;
+}
+
+void CConfig::LoadProfile(CString profileName)
+{
+	CString path = GetProfilePath(profileName);
+	if(!FileExists(path)) return;
+
+	char buf[256];
+	
+	// Load DutyList
+	for(int i=0; i<2; i++) {
+		for(int j=0; j<10; j++) {
+			CString key;
+			key.Format("DutyList_%d_%d", i, j);
+			GetPrivateProfileString("Config", key, "0", buf, 256, path);
+			DutyList[i][j] = atoi(buf);
+		}
+	}
+
+	#define LOAD_INT(x) GetPrivateProfileString("Config", #x, "0", buf, 256, path); x = atoi(buf)
+	#define LOAD_BOOL(x) GetPrivateProfileString("Config", #x, "0", buf, 256, path); x = atoi(buf)
+
+	LOAD_INT(TransitionTemp);
+	LOAD_INT(UpdateInterval);
+	LOAD_BOOL(Linear);
+	LOAD_BOOL(TakeOver);
+	LOAD_INT(ForceTemp);
+	LOAD_BOOL(LockGPUFrequency);
+	LOAD_INT(GPUFrequency);
+	LOAD_INT(GPUOverClock);
+	LOAD_INT(GPUOverMEMClock);
+	LOAD_INT(TakeOverDown);
+	LOAD_INT(TakeOverUp);
+	LOAD_INT(TakeOverLock);
+	LOAD_INT(upClockPercent);
+	LOAD_INT(downClockPercent);
+	LOAD_INT(downTemplimit);
+	LOAD_INT(upTemplimit);
+	LOAD_INT(upClocklimit);
+	LOAD_INT(timelimit);
+	LOAD_INT(GPU_LockClock);
+	LOAD_INT(CurveUV_limit);
+	LOAD_INT(OverClock2);
+
+	m_sCurrentProfile = profileName;
+	SaveConfig();
+}
+
+void CConfig::DeleteProfile(CString profileName)
+{
+	CString path = GetProfilePath(profileName);
+	DeleteFile(path);
+	if(m_sCurrentProfile == profileName)
+		//m_sCurrentProfile = "";
+		m_sCurrentProfile.Empty();
+}
+
+void CConfig::GetProfileList(CStringArray& profiles)
+{
+	profiles.RemoveAll();
+	CString dirPath = GetExePath();
+	CString profilesDir = dirPath + "\\profiles";
+	CString searchPath = profilesDir + "\\profile_*.ini";
+	
+	CFileFind finder;
+	BOOL bWorking = finder.FindFile(searchPath);
+	while (bWorking)
+	{
+		bWorking = finder.FindNextFile();
+		CString filename = finder.GetFileName();
+		// filename is profile_<name>.ini
+		// remove profile_ prefix and .ini suffix
+		if(filename.Left(8) == "profile_" && filename.Right(4) == ".ini")
+		{
+			CString name = filename.Mid(8, filename.GetLength() - 12);
+			profiles.Add(name);
+		}
+	}
 }

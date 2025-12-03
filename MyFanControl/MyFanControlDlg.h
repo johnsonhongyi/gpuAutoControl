@@ -65,6 +65,12 @@ public:
 	BOOL m_bAdvancedMode;//高级模式
 	int m_TakeOver_LockGPUFrequency_Staus;  //标记TakeOver时Lock状态
 
+	// Profile Management
+	void AppendProfileMenu(CMenu* pMenu);
+	afx_msg void OnProfileLoad(UINT nID);
+	afx_msg void OnProfileSave();
+	afx_msg void OnProfileDelete(UINT nID);
+
 public:
 	static DWORD WINAPI CoreThread(LPVOID lParam);
 	afx_msg void OnWindowPosChanging(WINDOWPOS* lpwndpos);

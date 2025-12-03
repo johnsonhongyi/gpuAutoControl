@@ -148,12 +148,20 @@ public:
 	int GPU_LockClock; //初始化锁定频率
 	int CurveUV_limit; //初始化mv
 	int OverClock2; //初始化mv
-
+	// Profile Management
+	CString m_sCurrentProfile;
 
 public:
 	void LoadDefault();//载入默认设置
 	void LoadConfig();//载入配置
 	void SaveConfig();//保存配置
+
+
+	void LoadProfile(CString profileName);
+	void SaveProfile(CString profileName);
+	void DeleteProfile(CString profileName);
+	void GetProfileList(CStringArray& profiles);
+	CString GetProfilePath(CString profileName);
 };
 
 
