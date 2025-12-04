@@ -1407,6 +1407,8 @@ void CConfig::LoadConfig()
 	/////////////////////////
 	LockGPUFrequency = ReadBool("GPU", "LockGPUFrequency", FALSE);
 	GPUFrequency = ReadInt("GPU", "GPUFrequency", 0);
+	// GPU_LockClock 用于存储初始锁定频率,从GPUFrequency初始化
+	GPU_LockClock = GPUFrequency;
 	GPUOverClock = ReadInt("GPU", "GPUOverClock", 50);
 	GPUOverMEMClock = ReadInt("GPU", "GPUOverMEMClock", 0);
 
@@ -1488,6 +1490,7 @@ void CConfig::SaveConfig()
 	/////////////////////////
 	WriteBool("GPU", "LockGPUFrequency", LockGPUFrequency);
 	WriteInt("GPU", "GPUFrequency", GPUFrequency);
+	// GPU_LockClock 不需要单独保存,它从GPUFrequency派生
 	WriteInt("GPU", "GPUOverClock", GPUOverClock);
 	WriteInt("GPU", "GPUOverMEMClock", GPUOverMEMClock);
 

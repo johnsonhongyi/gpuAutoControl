@@ -979,6 +979,11 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		::GetCursorPos(lpoint);//得到鼠标位置
 		CMenu menu;
 		menu.CreatePopupMenu();
+		
+		// 将"保存当前配置"放在菜单顶部,便于操作
+		menu.AppendMenu(MF_STRING, IDR_PROFILE_SAVE, "保存当前配置");
+		menu.AppendMenu(MF_SEPARATOR);
+		
 		if (m_bWindowVisible)
 			menu.AppendMenu(MF_STRING, IDR_SHOW, "隐藏");
 		else
@@ -1102,6 +1107,11 @@ void CMyFanControlDlg::AppendProfileMenu(CMenu* pMenu)
 
 void CMyFanControlDlg::OnProfileSave()
 {
+	// 注释掉文件选择器,直接使用当前GPU核心超频和GPU限频初始值作为文件名
+	// 格式: profile_[GPU核心超频]-[GPU限频初始值].ini
+	// 例如: profile_160-630.ini
+	
+	/*
 	CFileDialog dlg(FALSE, "ini", NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, "Profile Files (*.ini)|*.ini||", this);
 	CString profilesDir = m_core.m_config.GetProfilePath("").Left(m_core.m_config.GetProfilePath("").ReverseFind('\\'));
 	dlg.m_ofn.lpstrInitialDir = profilesDir;
@@ -1125,6 +1135,20 @@ void CMyFanControlDlg::OnProfileSave()
 		m_core.m_config.SaveProfile(fileName);
 		AfxMessageBox("配置已保存: " + fileName);
 	}
+	*/
+	
+	// 自动生成文件名: GPU核心超频-GPU限频初始值
+	CString fileName;
+	fileName.Format("%d-%d", m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock);
+	
+	m_core.m_config.SaveProfile(fileName);
+	
+	CString message;
+	message.Format("配置已保存: profile_%s.ini\nGPU核心超频: %d\nGPU限频初始值: %d", 
+		fileName, m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock);
+	
+	// 使用自动关闭消息框,10秒后自动关闭
+	AutoCloseMessageBox(message, "配置保存成功", 10);
 }
 
 void CMyFanControlDlg::OnProfileLoad(UINT nID)
@@ -1583,6 +1607,35 @@ void CMyFanControlDlg::OnBnClickedCheckLockGpuFrequancy()
 	}
 
 	m_core.m_config.LockGPUFrequency = m_ctlLockGpuFrequancy.GetCheck();
+}
+
+// 使用Windows API的MessageBoxTimeout (未公开API)
+typedef int (WINAPI *MSGBOXAAPI)(IN HWND hWnd, IN LPCSTR lpText, IN LPCSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
+
+void CMyFanControlDlg::AutoCloseMessageBox(CString message, CString title, int timeoutSeconds)
+{
+	// 使用MessageBoxTimeout API (存在于user32.dll中但未公开)
+	HMODULE hUser32 = LoadLibrary("user32.dll");
+	if (hUser32)
+	{
+		MSGBOXAAPI MessageBoxTimeoutA = (MSGBOXAAPI)GetProcAddress(hUser32, "MessageBoxTimeoutA");
+		if (MessageBoxTimeoutA)
+		{
+			// 调用MessageBoxTimeout,自动在指定时间后关闭
+			MessageBoxTimeoutA(this->m_hWnd, message, title, MB_OK | MB_ICONINFORMATION, 0, timeoutSeconds * 1000);
+		}
+		else
+		{
+			// 如果API不可用,使用普通消息框
+			AfxMessageBox(message);
+		}
+		FreeLibrary(hUser32);
+	}
+	else
+	{
+		// 如果加载失败,使用普通消息框
+		AfxMessageBox(message);
+	}
 }
 
 BOOL CMyFanControlDlg::CheckInputFrequency(int nFrequency)

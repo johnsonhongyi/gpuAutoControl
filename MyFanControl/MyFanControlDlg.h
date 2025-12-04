@@ -99,6 +99,7 @@ public:
 	BOOL CreateTaskXml(PCSTR strXmlPath, PCSTR strTargetPath);//创建计划任务所需的模板XML文件
 	afx_msg void OnBnClickedCheckLockGpuFrequancy();
 	BOOL CheckInputFrequency(int frequency);//检查输入的频率是否合适
+	void AutoCloseMessageBox(CString message, CString title, int timeoutSeconds);//自动关闭的消息框
 	CButton m_ctlLockGpuFrequancy;
 	afx_msg void OnEnChangeEditTreansition();
 	afx_msg void OnEnChangeEditForceTemp();
