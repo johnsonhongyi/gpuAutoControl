@@ -2,6 +2,18 @@
 using namespace std;
 #include <string>
 
+// LOG宏定义 - 支持表达式和printf格式
+#include <cstdarg>
+intptr_t LogExpr(const char* expr, const char* fileName, unsigned int line, intptr_t result);
+void LogPrintf(const char* fmt, ...);
+
+#define LOG_EXPR(expression) \
+    LogExpr(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t)(expression))
+#define LOG_PRINTF(...) LogPrintf(__VA_ARGS__)
+#define GET_MACRO(_1,_2,_3,_4,_5,_6,NAME,...) NAME
+#define LOG(...) \
+    GET_MACRO(__VA_ARGS__, \
+              LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_EXPR)(__VA_ARGS__)
 
 int GetTime(tm *pt = 0, int offset = 0);//得到当前时间，6位数时间92500,offset用于得到offset之后秒的时间
 int GetTimeInterval(int a, int b, int *p = 0);//时间差，输入两个6位数时间，如开盘时间91500，得到a-b，并转化为6位数时间，指针p接受以秒计的时间差
@@ -148,6 +160,16 @@ public:
 	int GPU_LockClock; //初始化锁定频率
 	int CurveUV_limit; //初始化mv
 	int OverClock2; //初始化mv
+	
+	// GPU动态频率控制参数
+	int baseClockLimit;        // 基础频率下限 (默认: 600)
+	int lowClockLimit;         // 低频率下限 (默认: 420)
+	int upClockRatio;          // 升频比例 ×100 (默认: 105)
+	int downClockRatio;        // 降频比例 ×100 (默认: 97)
+	int aggressiveUpRatio;     // 激进升频比例 (默认: 110)
+	int utilIdleThreshold;     // 空闲利用率阈值 (默认: 55)
+	int tempCoolThreshold;     // 低温阈值,激进升频 (默认: 65)
+	
 	// Profile Management
 	CString m_sCurrentProfile;
 
@@ -230,6 +252,18 @@ public:
 	void ResetGPUFrequancy();
 	void ResetSleepStatus();
 	void SetFanDuty();//设置风扇转速
+	
+	// GPU频率控制辅助函数
+	bool ShouldReduceForTemperature();
+	bool ShouldReduceForLowUtil();
+	bool ShouldIncreaseFrequency();
+	bool ShouldUnlockForIdle();
+	int CalculateTargetFrequency();
+	int ReduceFrequency(int ratio);
+	int IncreaseFrequency();
+	int RoundToNearest10(int freq);
+	void ApplyFrequencyChange(int newFreq, const char* reason);
+
 
 };
 

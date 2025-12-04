@@ -50,6 +50,9 @@
     <ClCompile Include="Core.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Core_helpers.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MyFanControl.rc">

@@ -113,6 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core.cpp" />
+    <ClCompile Include="Core_helpers.cpp" />
     <ClCompile Include="MyFanControl.cpp" />
     <ClCompile Include="MyFanControlDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

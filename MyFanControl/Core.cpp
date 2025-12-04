@@ -215,8 +215,23 @@ void* NvApiGpuHandles[128] = { 0 };
 
 //void* AdlContext = 0;
 
-#define LOG(expression) Log(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t) (expression))
+// #define LOG(expression) Log(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t) (expression))
+// ==== LOG宏 ====
 
+
+//#define LOG_EXPR(expression) \
+//    LogExpr(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t)(expression))
+//#define LOG_PRINTF(...) LogPrintf(__VA_ARGS__)
+//#define GET_MACRO(_1,_2,_3,_4,_5,_6,NAME,...) NAME
+//#define LOG(...) \
+//    GET_MACRO(__VA_ARGS__, \
+//              LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_EXPR)(__VA_ARGS__)
+
+
+#include <cstdarg>
+
+//extern FILE* LogFile;
+//FILE* LogFile = nullptr;
 
 FILE* LogFile = 0;
 
@@ -456,6 +471,66 @@ intptr_t Log(const char* expression, const char* fileName, unsigned int line, in
 
 	return result;
 }
+
+#include <ctime>
+#include <cstdio>
+
+intptr_t LogExpr(const char* expr,
+	const char* fileName,
+	unsigned int line,
+	intptr_t result)
+{
+	if (!LogFile)
+		return result;
+
+	time_t t = time(nullptr);
+	tm local{};
+	localtime_s(&local, &t);
+
+	fprintf(LogFile,
+		"[%02d.%02d.%04d %02d:%02d:%02d][%s:%04u] ",
+		local.tm_mday,
+		local.tm_mon + 1,
+		local.tm_year + 1900,
+		local.tm_hour,
+		local.tm_min,
+		local.tm_sec,
+		fileName,
+		line);
+
+	fprintf(LogFile, "result:%td  %s\n", result, expr);
+
+	fflush(LogFile);
+	return result;
+}
+
+void LogPrintf(const char* fmt, ...)
+{
+	if (!LogFile)
+		return;
+
+	time_t t = time(nullptr);
+	tm local{};
+	localtime_s(&local, &t);
+
+	fprintf(LogFile,
+		"[%02d.%02d.%04d %02d:%02d:%02d] ",
+		local.tm_mday,
+		local.tm_mon + 1,
+		local.tm_year + 1900,
+		local.tm_hour,
+		local.tm_min,
+		local.tm_sec);
+
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(LogFile, fmt, ap);
+	va_end(ap);
+
+	fprintf(LogFile, "\n");
+	fflush(LogFile);
+}
+
 
 int NvApiLoad()
 {
@@ -1356,8 +1431,19 @@ void CConfig::LoadDefault()
 	TakeOverUp = 0;
 	TakeOverLock = 0;
 	GPU_LockClock = 0; //init Lock Clock
+	
+	// GPU动态频率控制参数默认值
+	baseClockLimit = 600;
+	lowClockLimit = 420;
+	upClockRatio = 105;
+	downClockRatio = 97;
+	aggressiveUpRatio = 110;
+	utilIdleThreshold = 55;
+	tempCoolThreshold = 65;
+	
 	//m_sCurrentProfile = "";
 	m_sCurrentProfile.Empty();
+
 
 }
 
@@ -1430,6 +1516,17 @@ void CConfig::LoadConfig()
 	timelimit = ReadInt("Limit", "timelimit", 3);
 	CurveUV_limit = ReadInt("Limit", "CurveUV_limit", 690);
 	OverClock2 = ReadInt("Limit", "OverClock2", 145);
+
+	/////////////////////////
+	// GPU动态频率控制
+	/////////////////////////
+	baseClockLimit = ReadInt("FreqControl", "baseClockLimit", 600);
+	lowClockLimit = ReadInt("FreqControl", "lowClockLimit", 420);
+	upClockRatio = ReadInt("FreqControl", "upClockRatio", 105);
+	downClockRatio = ReadInt("FreqControl", "downClockRatio", 97);
+	aggressiveUpRatio = ReadInt("FreqControl", "aggressiveUpRatio", 110);
+	utilIdleThreshold = ReadInt("FreqControl", "utilIdleThreshold", 55);
+	tempCoolThreshold = ReadInt("FreqControl", "tempCoolThreshold", 65);
 
 	/////////////////////////
 	// DutyList
@@ -1512,6 +1609,17 @@ void CConfig::SaveConfig()
 	WriteInt("Limit", "timelimit", timelimit);
 	WriteInt("Limit", "CurveUV_limit", CurveUV_limit);
 	WriteInt("Limit", "OverClock2", OverClock2);
+
+	/////////////////////////
+	// GPU动态频率控制
+	/////////////////////////
+	WriteInt("FreqControl", "baseClockLimit", baseClockLimit);
+	WriteInt("FreqControl", "lowClockLimit", lowClockLimit);
+	WriteInt("FreqControl", "upClockRatio", upClockRatio);
+	WriteInt("FreqControl", "downClockRatio", downClockRatio);
+	WriteInt("FreqControl", "aggressiveUpRatio", aggressiveUpRatio);
+	WriteInt("FreqControl", "utilIdleThreshold", utilIdleThreshold);
+	WriteInt("FreqControl", "tempCoolThreshold", tempCoolThreshold);
 
 	/////////////////////////
 	// Profile
@@ -1856,47 +1964,22 @@ void CCore::Run()
 }
 void CCore::Work()
 {
-	//Update();
-	//if (m_bForcedCooling)//强制冷却
-	//{
-	//	if (m_nCurTemp[0] >= m_config.ForceTemp || m_nCurTemp[1] >= m_config.ForceTemp)
-	//	{
-	//		if (m_nSetDuty[0] < 95 || m_nSetDuty[1] < 95)
-	//		{
-	//			m_nSetDuty[0] = 95;
-	//			m_nSetDutyLevel[0] = 10;
-	//			m_nSetDuty[1] = 95;
-	//			m_nSetDutyLevel[1] = 10;
-	//			SetFanDuty();
-	//		}
-	//		return;
-	//	}
-	//	else
-	//		m_bForcedCooling = FALSE;
-	//}
-	//if (m_config.TakeOver)
-	//{
-	//	Control();
-	//}
-	//else
-	//	ResetFan();
 	if (m_GpuInfo.nv_Api_init == 1)
 		m_GpuInfo.Update();
 	else
 		Sleep(500);
 
 	//锁定GPU频率
-	int limitClock = 0;
+	int limitClock;
 	int limitTime = m_config.timelimit;
-	//int baseClockLimit = m_GpuInfo.m_nBaseClock;
-	int baseClockLimit = 600;
-	int lowClockLimit = 420;  //Lock 800 m_nGraphicsClock ==795
-	float upClockRatio = 1.05;
-	float downClockRatio = 0.97;
-	int limit_overclock = 350;
+	int baseClockLimit = m_config.baseClockLimit;
+	int lowClockLimit = m_config.lowClockLimit;
+	float upClockRatio = m_config.upClockRatio / 100.0;
+	float downClockRatio = m_config.downClockRatio / 100.0;
+	int limit_overclock = 200;
 	int resultLog = -1;
-	int baseMemClock = 6000;
-	int nGPU_Util_limit = 55;
+	int baseMemClock = 405;
+	int nGPU_Util_limit = m_config.utilIdleThreshold;
 	//m_core.m_config.Linear 线性控制
 	int count_time = limitTime * m_config.UpdateInterval; //使用周期*时间统计
 
@@ -1969,9 +2052,9 @@ void CCore::Work()
 						int takeOvercurtime = GetTime();
 						if (m_config.TakeOverUp >= limitTime || (takeOvercurtime > m_TakeOverTimeOut &&  m_config.TakeOverDown==0 && m_config.TakeOverUp >= int(limitTime / 2)) )
 						{
-							if (m_GpuInfo.m_nGPU_Util >= m_config.downClockPercent && m_GpuInfo.m_nGPU_Temp <= m_config.upTemplimit - 10)  //占用率大于70 切当前温度小于升频温度-10度 
+							if (m_GpuInfo.m_nGPU_Util >= m_config.downClockPercent && m_GpuInfo.m_nGPU_Temp <= m_config.tempCoolThreshold)  //占用率大于阈值且温度低于tempCoolThreshold 
 							{
-								limitClock = int(m_GpuInfo.m_nGraphicsClock * 1.10);
+								limitClock = int(m_GpuInfo.m_nGraphicsClock * (m_config.aggressiveUpRatio / 100.0));
 								//limitClock = 0;
 								//limitClock = m_config.GPU_LockClock;				//default LockClock bug 630 set 0
 							}
