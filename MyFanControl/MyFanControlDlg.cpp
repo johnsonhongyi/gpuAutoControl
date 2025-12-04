@@ -725,10 +725,23 @@ BOOL CMyFanControlDlg::CheckAndSave()
 		AfxMessageBox("GPU超频设定警告，已超过200,上限350,注意黑屏风险");
 	}
 	//
-	m_ctlFrequency.GetWindowTextA(str, 256);
-	int nFrequency = atoi(str);
-	if (!CheckInputFrequency(nFrequency))
-		return FALSE;
+	// 修复bug: 当动态锁定开启时,m_ctlFrequency显示的是实时频率,不应该用于保存初始配置
+	// 如果TakeOver和LockGPUFrequency都开启,应该保存GPU_LockClock而不是从UI读取
+	int nFrequency;
+	if (m_core.m_config.TakeOver && m_core.m_config.LockGPUFrequency)
+	{
+		// 动态锁定模式下,使用保存的初始锁定频率
+		nFrequency = m_core.m_config.GPU_LockClock;
+	}
+	else
+	{
+		// 非动态锁定模式,从UI控件读取
+		char str[256];
+		m_ctlFrequency.GetWindowTextA(str, 256);
+		nFrequency = atoi(str);
+		if (!CheckInputFrequency(nFrequency))
+			return FALSE;
+	}
 
 	//int OverClock = nForceTemp; //定义默认超频150
 	//if (nFrequency == 0)
