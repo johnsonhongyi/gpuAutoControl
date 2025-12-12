@@ -69,9 +69,13 @@ int CCore::RoundToNearest10(int freq)
 // 应用频率变化并记录日志
 void CCore::ApplyFrequencyChange(int newFreq, const char* reason)
 {
-	LOG("GPU频率调整: %d → %d MHz (原因: %s, 占用率: %d%%, 温度: %d°C)",
-		m_GpuInfo.m_nGraphicsClock, newFreq, reason,
-		m_GpuInfo.m_nGPU_Util, m_GpuInfo.m_nGPU_Temp);
+	// 仅当目标频率发生变化时才记录日志，避免重复刷屏
+	if (m_config.GPUFrequency != newFreq)
+	{
+		LOG("GPU频率调整: %d → %d MHz (原因: %s, 占用率: %d%%, 温度: %d°C)",
+			m_GpuInfo.m_nGraphicsClock, newFreq, reason,
+			m_GpuInfo.m_nGPU_Util, m_GpuInfo.m_nGPU_Temp);
+	}
 	
 	m_config.GPUFrequency = newFreq;
 	m_config.LockGPUFrequency = (newFreq > 0);
@@ -122,13 +126,45 @@ int CCore::CalculateTargetFrequency()
 	if (!m_config.TakeOver) return 0;
 	
 	// 每次都记录当前状态(用于调试)
-	static int logCounter = 0;
-	if (++logCounter >= 10) // 每10次记录一次,避免日志过多
+	// 状态变化检测 (用于去重日志)
+	// 状态变化检测 (用于去重日志)
+	// 增加阈值检测，避免微小波动导致日志太密集(用户要求: 300状态上下20%浮动不记录)
+	static int lastLogGraphicsClock = -1;
+	static int lastLogUtil = -1;
+	static int lastLogTemp = -1;
+	static int lastLogLock = -1;
+
+	// 频率变化率超过20%时记录 (如从300MHz到360MHz是20%变化)
+	bool bClockChanged = false;
+	if (lastLogGraphicsClock > 0)
+	{
+		float clockChangeRatio = fabs((float)(m_GpuInfo.m_nGraphicsClock - lastLogGraphicsClock)) / lastLogGraphicsClock;
+		bClockChanged = (clockChangeRatio > 0.20f);
+	}
+	// else
+	// {
+	// 	// 首次记录或上次为0，直接记录
+	// 	bClockChanged = (m_GpuInfo.m_nGraphicsClock != lastLogGraphicsClock);
+	// }
+	
+	// bool bLockChanged = (m_config.LockGPUFrequency != lastLogLock);
+	
+	// 占用率使用绝对差值：变化超过20个百分点时记录 (如从10%到31%，或从50%到30%)
+	bool bUtilChanged = abs(m_GpuInfo.m_nGPU_Util - lastLogUtil) > 30;
+	
+	// 温度变化超过5度才记录(过滤抖动)
+	bool bTempChanged = abs(m_GpuInfo.m_nGPU_Temp - lastLogTemp) > 5;
+
+	if (bClockChanged || bUtilChanged || bTempChanged)
 	{
 		LOG("GPU状态: 频率=%dMHz, 占用率=%d%%, 温度=%d°C, 锁定=%d",
 			m_GpuInfo.m_nGraphicsClock, m_GpuInfo.m_nGPU_Util, m_GpuInfo.m_nGPU_Temp,
 			m_config.LockGPUFrequency);
-		logCounter = 0;
+		
+		lastLogGraphicsClock = m_GpuInfo.m_nGraphicsClock;
+		lastLogUtil = m_GpuInfo.m_nGPU_Util;
+		lastLogTemp = m_GpuInfo.m_nGPU_Temp;
+		// lastLogLock = m_config.LockGPUFrequency;
 	}
 	
 	// 1. 温度保护 (维持立即触发，因为这是安全机制)

@@ -6,15 +6,19 @@ using namespace std;
 // LOG宏定义 - 支持表达式和printf格式
 #include <cstdarg>
 intptr_t LogExpr(const char* expr, const char* fileName, unsigned int line, intptr_t result);
-void LogPrintf(const char* fmt, ...);
+void LogPrintf(const char* fileName, unsigned int line, const char* fmt, ...);
 
 #define LOG_EXPR(expression) \
     LogExpr(#expression, strrchr(__FILE__, '\\') + 1, __LINE__, (intptr_t)(expression))
-#define LOG_PRINTF(...) LogPrintf(__VA_ARGS__)
+
+#define LOG_PRINTF(...) LogPrintf(strrchr(__FILE__, '\\') + 1, __LINE__, __VA_ARGS__)
+
+// MSVC __VA_ARGS__ 展开补丁
+#define EXPAND(x) x
 #define GET_MACRO(_1,_2,_3,_4,_5,_6,NAME,...) NAME
 #define LOG(...) \
-    GET_MACRO(__VA_ARGS__, \
-              LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_EXPR)(__VA_ARGS__)
+    EXPAND(GET_MACRO(__VA_ARGS__, \
+              LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_PRINTF, LOG_EXPR))(__VA_ARGS__)
 
 int GetTime(tm *pt = 0, int offset = 0);//得到当前时间，6位数时间92500,offset用于得到offset之后秒的时间
 int GetTimeInterval(int a, int b, int *p = 0);//时间差，输入两个6位数时间，如开盘时间91500，得到a-b，并转化为6位数时间，指针p接受以秒计的时间差
@@ -224,6 +228,8 @@ public:
 	BOOL m_bForcedCooling;//强制冷却
 	BOOL m_bTakeOverStatus;//接管控制状态，描述最后一次调用的是m_pfnSetFanDuty（TRUE）还是m_pfnSetFANDutyAuto（FALSE）
 	BOOL m_bForcedRefresh;//立即刷新
+	//int m_nPowerChangeRetryCount; //电源变更重试计数器(已弃用)
+	int m_nPowerStableCountdown; //电源稳定性倒计时(防抖)
 	//int m_nGPU_LockClock; //初始化锁定频率
 
 	//int limitClock;
@@ -253,7 +259,7 @@ public:
 	void ResetGPUFrequancy();
 	void ResetSleepStatus();
 	void SetFanDuty();//设置风扇转速
-	void RunCmdShell(BOOL bForce = FALSE);//运行自定义CmdShell
+	BOOL RunCmdShell(BOOL bForce = FALSE, BOOL bPowerStatusChange = FALSE);//运行自定义CmdShell
 	
 	// GPU频率控制辅助函数
 	bool ShouldReduceForTemperature();

@@ -1206,6 +1206,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 		if (m_core.m_ApmPowerStatusChange == 0)
 		{
 			m_core.m_ApmPowerStatusChange = 1;
+			m_core.m_bForcedRefresh = TRUE; // 立即触发刷新
 		}
 		break;
 	case PBT_APMRESUMEAUTOMATIC:
@@ -1224,6 +1225,7 @@ LRESULT CMyFanControlDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 			if (m_core.m_ApmPowerStatusChange == 0)
 			{
 				m_core.m_ApmPowerStatusChange = 1;
+				m_core.m_bForcedRefresh = TRUE;
 			}
 			m_core.ResetSleepStatus();
 			//SetTimer(0, 100, NULL);

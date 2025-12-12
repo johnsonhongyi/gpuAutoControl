@@ -504,7 +504,7 @@ intptr_t LogExpr(const char* expr,
 	return result;
 }
 
-void LogPrintf(const char* fmt, ...)
+void LogPrintf(const char* fileName, unsigned int line, const char* fmt, ...)
 {
 	if (!LogFile)
 		return;
@@ -514,13 +514,15 @@ void LogPrintf(const char* fmt, ...)
 	localtime_s(&local, &t);
 
 	fprintf(LogFile,
-		"[%02d.%02d.%04d %02d:%02d:%02d] ",
+		"[%02d.%02d.%04d %02d:%02d:%02d][%s:%04u] ",
 		local.tm_mday,
 		local.tm_mon + 1,
 		local.tm_year + 1900,
 		local.tm_hour,
 		local.tm_min,
-		local.tm_sec);
+		local.tm_sec,
+		fileName,
+		line);
 
 	va_list ap;
 	va_start(ap, fmt);
@@ -1804,7 +1806,9 @@ void CCore::Run()
 	m_config.LoadConfig();
 	
 	// 初始化时执行CmdShell检查
-	RunCmdShell(FALSE);
+	RunCmdShell(FALSE, TRUE);
+	
+	m_nPowerStableCountdown = 0; // 初始化电源稳定倒计时
 	
 	if (m_config.TakeOver == 1)
 	{
@@ -1830,16 +1834,49 @@ void CCore::Run()
 			if (curtime >= nNextChecktTime || m_bForcedRefresh)
 			{
 				//MessageBox(NULL , "工作中...", "MyFunColtrol" , 0);
-				if (m_ApmPowerStatusChange == 1)
+				// 持续监控显示模式和进程状态
+				// RunCmdShell(FALSE);
+				// m_ApmPowerStatusChange = 0; // 重置电源状态变更标志
+				
+				// 使用InterlockedExchange原子操作获取并重置状态，防止竞争条件
+				int powerChange = InterlockedExchange((LONG*)&m_ApmPowerStatusChange, 0);
+				
+				// 如果检测到电源变更，开始倒计时（防抖，例如等待3秒）
+				if (powerChange)
 				{
-					// 电源状态变化时执行CmdShell检查
-					RunCmdShell(FALSE);
-					m_ApmPowerStatusChange = 0;
+					if (m_nPowerStableCountdown == 0)
+						LOG("检测到电源变更，开始3秒稳定等待...");
+					m_nPowerStableCountdown = 3; 
 				}
-
+				
+				// 倒计时逻辑
+				if (m_nPowerStableCountdown > 0)
+				{
+					m_nPowerStableCountdown--;
+					LOG("电源稳定倒计时: %d", m_nPowerStableCountdown);
+					if (m_nPowerStableCountdown == 0)
+					{
+						// 倒计时结束，视为状态稳定，执行切换
+						// 传入 TRUE 表示这是由电源变更触发的
+						LOG("倒计时结束，准备执行RunCmdShell...");
+						RunCmdShell(FALSE, TRUE);
+					}
+				}
+				else
+				{
+					// 常规轮询 (内部限制每10秒一次)
+					// 传入 FALSE 表示非电源变更触发
+					RunCmdShell(FALSE, FALSE);
+				}
+				
 				Work();
 				m_nLastUpdateTime = curtime;//更新时间
-				nNextChecktTime = GetTime(NULL, m_config.UpdateInterval);//下一个更新时间
+				
+				// 设定下一次检查时间
+				if (m_nPowerStableCountdown > 0)
+					nNextChecktTime = GetTime(NULL, 1); // 倒计时期间每秒检查
+				else
+					nNextChecktTime = GetTime(NULL, m_config.UpdateInterval); // 正常间隔
 				m_bForcedRefresh = FALSE;
 				if (!bSetPriority)
 				{
@@ -2226,8 +2263,9 @@ void CCore::SetFanDuty()
 // 功能:
 // 1. 根据电池状态和显示频率执行显示模式切换脚本
 // 2. 检查并启动指定进程
-// 参数: bForce - 强制执行,忽略条件检查
-void CCore::RunCmdShell(BOOL bForce)
+// 参数: bForce - 强制执行
+//       bPowerStatusChange - 电源状态是否刚发生改变
+BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 {
 	CString dirPath = GetExePath();
 	CString inipath = dirPath + "\\MyFanconfig.ini";
@@ -2235,7 +2273,7 @@ void CCore::RunCmdShell(BOOL bForce)
 	// 检查配置文件是否存在
 	if (!FileExists(inipath))
 	{
-		return;
+		return FALSE;
 	}
 	
 	// 读取CmdShell配置
@@ -2269,29 +2307,96 @@ void CCore::RunCmdShell(BOOL bForce)
 	int battery_ACLine = GetBatteryACLineStatus();
 	int dmFrequency = GetDisplayFrequency();
 	
+	// 防止频繁执行的简单的冷却计时器
+	static int lastExecTime = 0;
+	int curTime = GetTime();
+	
+	// 状态记忆：记录上次检测到的AC和Freq状态
+	static int lastKnownACLine = -1;
+	static int lastKnownFreq = -1;
+	
 	// 执行显示模式切换命令
-	// 条件: 文件存在 且 (强制执行 或 (使用电池且非60Hz) 或 (接电源且60Hz))
-	if (FileExists(cmdpath) && 
-	    (bForce || (battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60)))
+	// 逻辑:
+	// 1. 强制执行
+	// 2. 电池模式(AC=0) 且 屏幕频率不是60Hz -> 切换(预期切到60Hz)
+	// 3. 电源模式(AC=1) 且 屏幕频率是60Hz -> 切换(预期切到高刷)
+	bool bNeedSwitch = false;
+	
+	if (battery_ACLine == 0 && dmFrequency != 60)
+		bNeedSwitch = true;
+	else if (battery_ACLine == 1 && dmFrequency == 60)
+		bNeedSwitch = true;
+	
+	// 状态变化检测：只有当AC或Freq状态发生实际变化时，才认为需要重新尝试
+	bool bStateChanged = (battery_ACLine != lastKnownACLine) || (dmFrequency != lastKnownFreq);
+		
+	if (FileExists(cmdpath))
 	{
-		int result = WinExec(runcmdpath, runcmdshow);
-		int resultLog = -1;
-		LOG("RunCmdShell: 执行显示模式切换");
-		LOG(resultLog = result);
+		int intervalSeconds = 0;
+		GetTimeInterval(curTime, lastExecTime, &intervalSeconds);
+		intervalSeconds = abs(intervalSeconds); // 获取秒数差
+
+		// 执行条件：
+		// 1. 强制执行
+		// 2. 需要切换 且 电源刚变更(需间隔>3秒)
+		// 3. 需要切换 且 状态发生变化 且 轮询检查(需间隔>10秒)
+		// 移除了无状态变化时的自动重试，避免脚本失败时的无限循环
+		BOOL bTimeCondition = FALSE;
+		if (bPowerStatusChange)
+		{
+			if (intervalSeconds > 3) bTimeCondition = TRUE;
+		}
+		else if (bStateChanged)
+		{
+			// 只有状态变化时才允许轮询重试
+			if (intervalSeconds > 10) bTimeCondition = TRUE;
+		}
+
+		if (bForce || (bNeedSwitch && bTimeCondition))
+		{
+			// 只有在非强制执行时才记录日志(避免初始化时的刷屏? 其实初始化时也只是一次)
+			// 为了调试，我们总是记录
+			LOG("RunCmdShell: 触发切换. AC=%d, Freq=%d, Force=%d, PowerChange=%d, Inteval=%ds", 
+				battery_ACLine, dmFrequency, bForce, bPowerStatusChange, intervalSeconds);
+			
+			int result = WinExec(runcmdpath, runcmdshow);
+			if (result > 31)
+				LOG("RunCmdShell: 脚本执行成功 (返回值=%d)", result);
+			else
+				LOG("RunCmdShell: 脚本执行失败 (错误码=%d)", result);
+			
+			lastExecTime = curTime;
+			// 更新状态记忆，防止在同一状态下重复执行
+			lastKnownACLine = battery_ACLine;
+			lastKnownFreq = dmFrequency;
+			return TRUE; // 成功执行
+		}
 	}
 	
 	// 检查并启动进程
 	if (!processname.IsEmpty())
 	{
+		// 降低检查频率? 不，进程检查轻量级
 		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
 		{
-			LOG("RunCmdShell: 检测到进程未运行,启动进程");
-			int result = WinExec(processcmdpath, procshowcmd);
-			int resultLog = -1;
-			LOG("RunCmdShell: 进程启动完成");
-			LOG(resultLog = result);
+			// 防止连续启动尝试，也加上冷却时间? 
+			// ProcessIDByName返回0说明没运行，应该启动。
+			// 如果启动失败，我们不希望死循环。
+			static int lastProcExecTime = 0;
+			if (abs(curTime - lastProcExecTime) > 10) 
+			{
+				LOG("RunCmdShell: 检测到进程[%s]未运行, 正在启动...", processname.GetString());
+				int result = WinExec(processcmdpath, procshowcmd);
+				if (result > 31)
+					LOG("RunCmdShell: 进程启动成功 (返回值=%d)", result);
+				else
+					LOG("RunCmdShell: 进程启动失败 (错误码=%d)", result);
+				lastProcExecTime = curTime;
+			}
 		}
 	}
+	
+	return FALSE; // 未执行切换
 }
 
 // Profile Management Implementation
