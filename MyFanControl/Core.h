@@ -1,6 +1,7 @@
 ﻿#pragma once
 using namespace std;
 #include <string>
+#include <vector>
 
 // LOG宏定义 - 支持表达式和printf格式
 #include <cstdarg>
@@ -264,7 +265,18 @@ public:
 	int IncreaseFrequency();
 	int RoundToNearest10(int freq);
 	void ApplyFrequencyChange(int newFreq, const char* reason);
+	
+	// 比例判断辅助函数
+	// history: 历史记录buffer
+	// condition: 当前条件状态
+	// window: 窗口大小(timelimit)
+	// ratio: 触发比例(0.0-1.0)
+	bool CheckRatio(std::vector<bool>& history, bool condition, int window, double ratio);
 
 
+protected:
+	std::vector<bool> m_vHistoryDown;
+	std::vector<bool> m_vHistoryUp;
+	std::vector<bool> m_vHistoryLock;
 };
 

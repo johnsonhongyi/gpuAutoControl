@@ -1604,16 +1604,31 @@ void CMyFanControlDlg::OnBnClickedCheckLockGpuFrequancy()
 {
 	// TODO:  在此添加控件通知处理程序代码
 	int val = m_ctlLockGpuFrequancy.GetCheck();
+	int nFrequency = 0;
+	
 	if (val)
 	{
 		char str[256];
 		m_ctlFrequency.GetWindowTextA(str, 256);
-		int nFrequency = atoi(str);
+		nFrequency = atoi(str);
 		if (!CheckInputFrequency(nFrequency))
+		{
 			m_ctlLockGpuFrequancy.SetCheck(FALSE);
+			val = 0;
+		}
 	}
 
-	m_core.m_config.LockGPUFrequency = m_ctlLockGpuFrequancy.GetCheck();
+	m_core.m_config.LockGPUFrequency = val;
+
+	if (val)
+	{
+		// 锁定开启时,更新配置中的频率
+		if (nFrequency > 0)
+		{
+			m_core.m_config.GPUFrequency = nFrequency;
+			m_core.m_config.GPU_LockClock = nFrequency; // 更新锁定目标频率
+		}
+	}
 }
 
 // 使用Windows API的MessageBoxTimeout (未公开API)
