@@ -685,7 +685,7 @@ int NvApiEnumTccGpus()
 
 	return result;
 }
-int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* voltageUV, int* frequencyDeltaKHz,int checkCount=128)
+int NvApiGetCurve(unsigned int gpuBusId, unsigned int* count, unsigned int* voltageUV, int* frequencyDeltaKHz, unsigned int checkCount=128)
 {
 	int result = -1;
 
@@ -1286,7 +1286,7 @@ BOOL CGPUInfo::OverClockFrequency(int frequency, int memOverClock, int limitUV,i
 		int frequencyDeltaKHz_OV[255] = { 0 };
 		int count = sizeof(voltageUV) / sizeof(voltageUV[0]);
 		int j = 0;
-		int limitUv = limitUV * 1000;
+		unsigned int limitUv = limitUV * 1000;
 
 		int frequency_DeltaKHz_Value = overClock2 * 500;
 		//int frequency_DeltaKHz_Value = (frequency - 20) * 500;
@@ -1865,8 +1865,8 @@ void CCore::Work()
 	int limitTime = m_config.timelimit;
 	int baseClockLimit = m_config.baseClockLimit;
 	int lowClockLimit = m_config.lowClockLimit;
-	float upClockRatio = m_config.upClockRatio / 100.0;
-	float downClockRatio = m_config.downClockRatio / 100.0;
+	float upClockRatio = (float)(m_config.upClockRatio / 100.0);
+	float downClockRatio = (float)(m_config.downClockRatio / 100.0);
 	int limit_overclock = 200;
 	int resultLog = -1;
 	int baseMemClock = 405;

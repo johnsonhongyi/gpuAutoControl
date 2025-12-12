@@ -1,4 +1,4 @@
-// GPU频率控制辅助函数实现
+﻿// GPU频率控制辅助函数实现
 #include "stdafx.h"
 #include "Core.h"
 
