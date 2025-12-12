@@ -252,6 +252,7 @@ public:
 	void ResetGPUFrequancy();
 	void ResetSleepStatus();
 	void SetFanDuty();//设置风扇转速
+	void RunCmdShell(BOOL bForce = FALSE);//运行自定义CmdShell
 	
 	// GPU频率控制辅助函数
 	bool ShouldReduceForTemperature();

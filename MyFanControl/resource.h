@@ -47,6 +47,7 @@
 #define IDR_PROFILE_LOAD_BASE           2000
 #define IDR_PROFILE_DELETE_BASE         3000
 #define IDR_PROFILE_SAVE                4000
+#define ID_MENU_RUN_CMDSHELL            5001
 
 
 // Next default values for new objects

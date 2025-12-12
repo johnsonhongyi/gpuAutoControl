@@ -806,9 +806,9 @@ BOOL CMyFanControlDlg::CheckAndSave()
 	m_core.m_config.upClockPercent = nDutyList[0][0];//占用率升频阈值
 	m_core.m_config.downClockPercent = nDutyList[0][1];//占用率降频阈值
 	m_core.m_config.downTemplimit = nDutyList[0][2];//温控降频阈值
-	m_core.m_config.upTemplimit = nDutyList[0][3];//温控升频阈值
-	m_core.m_config.upClocklimit = nDutyList[0][4];//温控升频阈值
-	m_core.m_config.timelimit = nDutyList[0][5];//温控时长
+	m_core.m_config.upTemplimit = nDutyList[0][3];//温控升频阈值(期望恒定温度)
+	m_core.m_config.upClocklimit = nDutyList[0][4];//温控频率上限
+	m_core.m_config.timelimit = nDutyList[0][5];//温控循环时长
 	m_core.m_config.CurveUV_limit = nDutyList[0][6];//CurveUV_limit mv
 	m_core.m_config.OverClock2 = nDutyList[0][7];//OverClock2 Mhz
 
@@ -989,6 +989,9 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		else
 			menu.AppendMenu(MF_STRING, IDR_SHOW, "显示");
 		
+		
+		menu.AppendMenu(MF_STRING, ID_MENU_RUN_CMDSHELL, "运行CmdShell");
+
 		// Add Profile Submenu
 		AppendProfileMenu(&menu);
 		
@@ -1004,6 +1007,10 @@ LRESULT CMyFanControlDlg::OnShowTask(WPARAM wParam, LPARAM lParam)
 		else if (xx == IDR_EXIT)
 		{
 			OnOK();
+		}
+		else if (xx == ID_MENU_RUN_CMDSHELL)
+		{
+			m_core.RunCmdShell(TRUE);
 		}
 		else if (xx == IDR_PROFILE_SAVE)
 		{
@@ -1137,18 +1144,18 @@ void CMyFanControlDlg::OnProfileSave()
 	}
 	*/
 	
-	// 自动生成文件名: GPU核心超频-GPU限频初始值
+	// 自动生成文件名: GPU核心超频-GPU限频初始值-期望恒定温度
 	CString fileName;
-	fileName.Format("%d-%d", m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock);
+	fileName.Format("%d-%d-%d", m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock, m_core.m_config.upTemplimit);
 	
 	m_core.m_config.SaveProfile(fileName);
 	
 	CString message;
-	message.Format("配置已保存: profile_%s.ini\nGPU核心超频: %d\nGPU限频初始值: %d", 
-		fileName, m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock);
+	message.Format("配置已保存: profile_%s.ini\nGPU核心超频: %d\nGPU限频初始值: %d\n期望恒定温度: %d", 
+		fileName, m_core.m_config.ForceTemp, m_core.m_config.GPU_LockClock, m_core.m_config.upTemplimit);
 	
-	// 使用自动关闭消息框,10秒后自动关闭
-	AutoCloseMessageBox(message, "配置保存成功", 10);
+	// 使用自动关闭消息框,6秒后自动关闭
+	AutoCloseMessageBox(message, "配置保存成功", 6);
 }
 
 void CMyFanControlDlg::OnProfileLoad(UINT nID)

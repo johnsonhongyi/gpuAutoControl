@@ -1802,72 +1802,10 @@ void CCore::Run()
 	static int nNextChecktTime = 0;
 	static BOOL bSetPriority = FALSE;
 	m_config.LoadConfig();
-	CString cmdpath;
-	CString runcmdpath;
-	int runcmdshow = SW_SHOWMINIMIZED;
-	//m_nInit = 2;
-	//Sleep(3000);
-	CString dirPath = GetExePath();
-	CString inipath = dirPath + "\\MyFanconfig.ini";
-	//int battery_percent = GetBatteryLevel();
-	CString processname;
-	CString processpath;
-	CString processcmd;
-	CString processcmdpath;
-	int procshowcmd = SW_SHOWMINIMIZED;
-	//CString showcmd;
-
-	if (FileExists(inipath))
-	{
-		char returnValue[100];
-		//char returnValue[1024] = { 0 }
-		GetPrivateProfileString("cmdshell", "filepath", 0, returnValue, 100, inipath);
-		cmdpath = returnValue;
-		GetPrivateProfileString("cmdshell", "runcmd", 0, returnValue, 100, inipath);
-		CString runcmd = returnValue;
-		runcmdpath = runcmd +" "+ cmdpath;
-		GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
-		runcmdshow = atoi(returnValue);
-
-		GetPrivateProfileString("processcheck", "processname", 0, returnValue, 100, inipath);
-		processname = returnValue;
-		GetPrivateProfileString("processcheck", "processpath", 0, returnValue, 100, inipath);
-		processpath = returnValue;
-		GetPrivateProfileString("processcheck", "processcmd", 0, returnValue, 100, inipath);
-		CString processcmd = returnValue;
-		processcmdpath = processcmd + " " + processpath;
-		GetPrivateProfileString("processcheck", "procshowcmd ", 0, returnValue, 100, inipath);
-		procshowcmd = atoi(returnValue);
-
-	}
-	int battery_ACLine = GetBatteryACLineStatus();
-	int dmFrequency = GetDisplayFrequency();
-	//if (FileExists(cmdpath) && GetBatteryACLineStatus() == 0 && GetBatteryLevel() < 100)
-	if (FileExists(cmdpath) && ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60)) )
-	{
-		//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
-		int result = WinExec(runcmdpath, runcmdshow);
-		// don't show cmd
-		//int result = WinExec((runcmdpath),1);
-		int resultLog = -1;
-		LOG("runApmPowerStatusChangeInitCheck");
-		LOG(resultLog = result);
-	}
-
-	if (!processname.IsEmpty())
-	{
-		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
-		{
-			LOG("check process not runing");
-			int result = WinExec(processcmdpath, procshowcmd);
-			// don't show cmd
-			//int result = WinExec((runcmdpath),1);
-			int resultLog = -1;
-			LOG("run proc ok ");
-			//LOG(resultLog = result);
-		}
-	}
-
+	
+	// 初始化时执行CmdShell检查
+	RunCmdShell(FALSE);
+	
 	if (m_config.TakeOver == 1)
 	{
 		m_TakeOverTimeOut = 0;
@@ -1894,55 +1832,8 @@ void CCore::Run()
 				//MessageBox(NULL , "工作中...", "MyFunColtrol" , 0);
 				if (m_ApmPowerStatusChange == 1)
 				{
-					int battery_ACLine = GetBatteryACLineStatus();
-					int dmFrequency = GetDisplayFrequency();
-					if (!FileExists(cmdpath))
-					{
-						LOG("runApmPowerStatusChange is not exists filepath");
-					}
-					else {
-						//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
-						int battery_ACLine = GetBatteryACLineStatus();
-						int dmFrequency = GetDisplayFrequency();
-						if ((battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60))
-						{
-							int result = WinExec(runcmdpath, runcmdshow);
-							// don't show cmd
-							//int result = WinExec((runcmdpath),1);
-							int resultLog = -1;
-							LOG("run set dmFrequency ok");
-							LOG(resultLog = result);
-
-						}
-						if (!processname.IsEmpty())
-						{
-							if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
-							{
-								LOG("check processname not runing");
-								int result = WinExec(processcmdpath, procshowcmd);
-								// don't show cmd
-								//int result = WinExec((runcmdpath),1);
-								int resultLog = -1;
-								LOG("runApm check proc finish ");
-								//LOG(resultLog = result);
-							}
-						}
-					}
-
-					//DWORD fileAttr = GetFileAttributes(cmdpath);
-					//if (0xFFFFFFFF == fileAttr && GetLastError() == ERROR_FILE_NOT_FOUND)
-					//{
-					//	LOG("runApmPowerStatusChange is not exists cmdpath");
-					//}
-					//else {
-					//	//int result = system("cmd /k python C:\\JohnsonProgram\\SetDisplayMode\\core\\SetDisplayMode.py");
-					//	int result = WinExec(runcmdpath, SW_SHOWMINIMIZED);
-					//	// don't show cmd
-					//	//int result = WinExec((runcmdpath),1);
-					//	int resultLog = -1;
-					//	LOG("runApmPowerStatusChange");
-					//	LOG(resultLog = result);
-					//}
+					// 电源状态变化时执行CmdShell检查
+					RunCmdShell(FALSE);
 					m_ApmPowerStatusChange = 0;
 				}
 
@@ -2468,6 +2359,78 @@ void CCore::SetFanDuty()
 			m_pfnSetFanDuty(i + 2, duty);//如果存在第3个风扇
 	}
 	m_bTakeOverStatus = TRUE;
+}
+
+// RunCmdShell - 执行自定义命令脚本和进程检查
+// 功能:
+// 1. 根据电池状态和显示频率执行显示模式切换脚本
+// 2. 检查并启动指定进程
+// 参数: bForce - 强制执行,忽略条件检查
+void CCore::RunCmdShell(BOOL bForce)
+{
+	CString dirPath = GetExePath();
+	CString inipath = dirPath + "\\MyFanconfig.ini";
+	
+	// 检查配置文件是否存在
+	if (!FileExists(inipath))
+	{
+		return;
+	}
+	
+	// 读取CmdShell配置
+	char returnValue[100];
+	CString cmdpath, runcmd, runcmdpath;
+	int runcmdshow = SW_SHOWMINIMIZED;
+	
+	GetPrivateProfileString("cmdshell", "filepath", 0, returnValue, 100, inipath);
+	cmdpath = returnValue;
+	GetPrivateProfileString("cmdshell", "runcmd", 0, returnValue, 100, inipath);
+	runcmd = returnValue;
+	runcmdpath = runcmd + " " + cmdpath;
+	GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
+	runcmdshow = atoi(returnValue);
+	
+	// 读取进程检查配置
+	CString processname, processpath, processcmd, processcmdpath;
+	int procshowcmd = SW_SHOWMINIMIZED;
+	
+	GetPrivateProfileString("processcheck", "processname", 0, returnValue, 100, inipath);
+	processname = returnValue;
+	GetPrivateProfileString("processcheck", "processpath", 0, returnValue, 100, inipath);
+	processpath = returnValue;
+	GetPrivateProfileString("processcheck", "processcmd", 0, returnValue, 100, inipath);
+	processcmd = returnValue;
+	processcmdpath = processcmd + " " + processpath;
+	GetPrivateProfileString("processcheck", "procshowcmd", 0, returnValue, 100, inipath);
+	procshowcmd = atoi(returnValue);
+	
+	// 获取当前电池和显示状态
+	int battery_ACLine = GetBatteryACLineStatus();
+	int dmFrequency = GetDisplayFrequency();
+	
+	// 执行显示模式切换命令
+	// 条件: 文件存在 且 (强制执行 或 (使用电池且非60Hz) 或 (接电源且60Hz))
+	if (FileExists(cmdpath) && 
+	    (bForce || (battery_ACLine == 0 && dmFrequency != 60) || (battery_ACLine == 1 && dmFrequency == 60)))
+	{
+		int result = WinExec(runcmdpath, runcmdshow);
+		int resultLog = -1;
+		LOG("RunCmdShell: 执行显示模式切换");
+		LOG(resultLog = result);
+	}
+	
+	// 检查并启动进程
+	if (!processname.IsEmpty())
+	{
+		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
+		{
+			LOG("RunCmdShell: 检测到进程未运行,启动进程");
+			int result = WinExec(processcmdpath, procshowcmd);
+			int resultLog = -1;
+			LOG("RunCmdShell: 进程启动完成");
+			LOG(resultLog = result);
+		}
+	}
 }
 
 // Profile Management Implementation
