@@ -135,11 +135,12 @@ int CCore::CalculateTargetFrequency()
 	static int lastLogLock = -1;
 
 	// 频率变化率超过20%时记录 (如从300MHz到360MHz是20%变化)
+	// 但仅当频率大于LockGPUFrequency时才记录，避免低频时的日志噪音
 	bool bClockChanged = false;
-	if (lastLogGraphicsClock > 0)
+	if (lastLogGraphicsClock > 0 && m_GpuInfo.m_nGraphicsClock > m_config.GPUFrequency)
 	{
 		float clockChangeRatio = fabs((float)(m_GpuInfo.m_nGraphicsClock - lastLogGraphicsClock)) / lastLogGraphicsClock;
-		bClockChanged = (clockChangeRatio > 0.20f);
+		bClockChanged = (clockChangeRatio > 0.05f);
 	}
 	// else
 	// {

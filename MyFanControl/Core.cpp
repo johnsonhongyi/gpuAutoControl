@@ -2377,7 +2377,8 @@ BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 	if (!processname.IsEmpty())
 	{
 		// 降低检查频率? 不，进程检查轻量级
-		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processcmdpath))
+		// 修复: 检查 processpath 而不是 processcmdpath (后者是完整命令行，不是文件路径)
+		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processpath))
 		{
 			// 防止连续启动尝试，也加上冷却时间? 
 			// ProcessIDByName返回0说明没运行，应该启动。
@@ -2386,12 +2387,24 @@ BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 			if (abs(curTime - lastProcExecTime) > 10) 
 			{
 				LOG("RunCmdShell: 检测到进程[%s]未运行, 正在启动...", processname.GetString());
+				LOG("RunCmdShell: 执行命令: %s", processcmdpath.GetString());
 				int result = WinExec(processcmdpath, procshowcmd);
 				if (result > 31)
 					LOG("RunCmdShell: 进程启动成功 (返回值=%d)", result);
 				else
 					LOG("RunCmdShell: 进程启动失败 (错误码=%d)", result);
 				lastProcExecTime = curTime;
+			}
+		}
+		else if (FindProcessIDByName(processname.GetString()) == 0 && !FileExists(processpath))
+		{
+			// 进程不存在且文件路径也不存在，记录警告
+			static int lastWarningTime = 0;
+			if (abs(curTime - lastWarningTime) > 60) // 每60秒警告一次
+			{
+				LOG("RunCmdShell: 警告 - 进程[%s]未运行，但文件路径不存在: %s", 
+					processname.GetString(), processpath.GetString());
+				lastWarningTime = curTime;
 			}
 		}
 	}
