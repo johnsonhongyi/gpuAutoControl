@@ -2488,7 +2488,7 @@ BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
     // 脚本刚执行完，但系统状态还没变 —— 这是正常的
     if (s_waitingEffect)
     {
-        if (bStateChanged)
+        if (bStateChanged || bForce)
         {
             LOG("RunCmdShell: 状态已生效 AC=%d Freq=%d",
                 battery_ACLine, dmFrequency);
