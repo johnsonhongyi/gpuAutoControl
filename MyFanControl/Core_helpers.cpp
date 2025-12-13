@@ -137,7 +137,8 @@ int CCore::CalculateTargetFrequency()
 	// 频率变化率超过20%时记录 (如从300MHz到360MHz是20%变化)
 	// 但仅当频率大于LockGPUFrequency时才记录，避免低频时的日志噪音
 	bool bClockChanged = false;
-	if (lastLogGraphicsClock > 0 && m_GpuInfo.m_nGraphicsClock > m_config.GPUFrequency)
+	const int lockClock = m_config.GPU_LockClock;
+	if (lastLogGraphicsClock > 0 && m_GpuInfo.m_nGraphicsClock * 100 >= lockClock * 80)
 	{
 		float clockChangeRatio = fabs((float)(m_GpuInfo.m_nGraphicsClock - lastLogGraphicsClock)) / lastLogGraphicsClock;
 		bClockChanged = (clockChangeRatio > 0.05f);
