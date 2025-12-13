@@ -1844,9 +1844,9 @@ void CCore::Run()
 				// 如果检测到电源变更，开始倒计时（防抖，例如等待3秒）
 				if (powerChange)
 				{
-					if (m_nPowerStableCountdown == 0)
-						LOG("检测到电源变更，开始3秒稳定等待...");
-					m_nPowerStableCountdown = 3; 
+					// 设置倒计时为4,因为会立即递减一次,实际等待3秒
+					m_nPowerStableCountdown = 4;
+					LOG("检测到电源变更，开始3秒稳定等待...");
 				}
 				
 				// 倒计时逻辑
@@ -2265,29 +2265,188 @@ void CCore::SetFanDuty()
 // 2. 检查并启动指定进程
 // 参数: bForce - 强制执行
 //       bPowerStatusChange - 电源状态是否刚发生改变
+// BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
+// {
+// 	CString dirPath = GetExePath();
+// 	CString inipath = dirPath + "\\MyFanconfig.ini";
+	
+// 	// 检查配置文件是否存在
+// 	if (!FileExists(inipath))
+// 	{
+// 		return FALSE;
+// 	}
+	
+// 	// 读取CmdShell配置
+// 	char returnValue[100];
+// 	CString cmdpath, runcmd, runcmdpath;
+// 	int runcmdshow = SW_SHOWMINIMIZED;
+	
+// 	GetPrivateProfileString("cmdshell", "filepath", 0, returnValue, 100, inipath);
+// 	cmdpath = returnValue;
+// 	GetPrivateProfileString("cmdshell", "runcmd", 0, returnValue, 100, inipath);
+// 	runcmd = returnValue;
+// 	runcmdpath = runcmd + " " + cmdpath;
+// 	GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
+// 	runcmdshow = atoi(returnValue);
+	
+// 	// 读取进程检查配置
+// 	CString processname, processpath, processcmd, processcmdpath;
+// 	int procshowcmd = SW_SHOWMINIMIZED;
+	
+// 	GetPrivateProfileString("processcheck", "processname", 0, returnValue, 100, inipath);
+// 	processname = returnValue;
+// 	GetPrivateProfileString("processcheck", "processpath", 0, returnValue, 100, inipath);
+// 	processpath = returnValue;
+// 	GetPrivateProfileString("processcheck", "processcmd", 0, returnValue, 100, inipath);
+// 	processcmd = returnValue;
+// 	processcmdpath = processcmd + " " + processpath;
+// 	GetPrivateProfileString("processcheck", "procshowcmd", 0, returnValue, 100, inipath);
+// 	procshowcmd = atoi(returnValue);
+	
+// 	// 获取当前电池和显示状态
+// 	int battery_ACLine = GetBatteryACLineStatus();
+// 	int dmFrequency = GetDisplayFrequency();
+	
+// 	// 防止频繁执行的简单的冷却计时器
+// 	static int lastExecTime = 0;
+// 	int curTime = GetTime();
+	
+// 	// 状态记忆：记录上次检测到的AC和Freq状态
+// 	static int lastKnownACLine = -1;
+// 	static int lastKnownFreq = -1;
+	
+// 	// 执行显示模式切换命令
+// 	// 逻辑:
+// 	// 1. 强制执行
+// 	// 2. 电池模式(AC=0) 且 屏幕频率不是60Hz -> 切换(预期切到60Hz)
+// 	// 3. 电源模式(AC=1) 且 屏幕频率是60Hz -> 切换(预期切到高刷)
+// 	bool bNeedSwitch = false;
+	
+// 	if (battery_ACLine == 0 && dmFrequency != 60)
+// 		bNeedSwitch = true;
+// 	else if (battery_ACLine == 1 && dmFrequency == 60)
+// 		bNeedSwitch = true;
+	
+// 	// 状态变化检测：只有当AC或Freq状态发生实际变化时，才认为需要重新尝试
+// 	bool bStateChanged = (battery_ACLine != lastKnownACLine) || (dmFrequency != lastKnownFreq);
+	
+// 	// 调试日志：输出当前状态信息
+// 	if (bPowerStatusChange || bStateChanged)
+// 	{
+// 		LOG("RunCmdShell: 状态检查 - AC=%d(上次=%d), Freq=%d(上次=%d)", 
+// 			battery_ACLine, lastKnownACLine, dmFrequency, lastKnownFreq);
+// 		LOG("RunCmdShell: 状态标志 - NeedSwitch=%d, StateChanged=%d, PowerChange=%d", 
+// 			bNeedSwitch, bStateChanged, bPowerStatusChange);
+// 	}
+		
+// 	if (FileExists(cmdpath))
+// 	{
+// 		int intervalSeconds = 0;
+// 		GetTimeInterval(curTime, lastExecTime, &intervalSeconds);
+// 		intervalSeconds = abs(intervalSeconds); // 获取秒数差
+
+// 		// 执行条件：
+// 		// 1. 强制执行
+// 		// 2. 需要切换 且 电源刚变更(需间隔>3秒)
+// 		// 3. 需要切换 且 状态发生变化 且 轮询检查(需间隔>10秒)
+// 		// 移除了无状态变化时的自动重试，避免脚本失败时的无限循环
+// 		BOOL bTimeCondition = FALSE;
+// 		if (bPowerStatusChange)
+// 		{
+// 			if (intervalSeconds > 3) bTimeCondition = TRUE;
+// 		}
+// 		else if (bStateChanged)
+// 		{
+// 			// 只有状态变化时才允许轮询重试
+// 			if (intervalSeconds > 10) bTimeCondition = TRUE;
+// 		}
+
+// 		if (bForce || (bNeedSwitch && bTimeCondition))
+// 		{
+// 			// 只有在非强制执行时才记录日志(避免初始化时的刷屏? 其实初始化时也只是一次)
+// 			// 为了调试，我们总是记录
+// 			LOG("RunCmdShell: 触发切换. AC=%d, Freq=%d, Force=%d, PowerChange=%d, Inteval=%ds", 
+// 				battery_ACLine, dmFrequency, bForce, bPowerStatusChange, intervalSeconds);
+			
+// 			int result = WinExec(runcmdpath, runcmdshow);
+// 			if (result > 31)
+// 				LOG("RunCmdShell: 脚本执行成功 (返回值=%d)", result);
+// 			else
+// 				LOG("RunCmdShell: 脚本执行失败 (错误码=%d)", result);
+			
+// 			lastExecTime = curTime;
+// 			// 更新状态记忆，防止在同一状态下重复执行
+// 			lastKnownACLine = battery_ACLine;
+// 			lastKnownFreq = dmFrequency;
+// 			return TRUE; // 成功执行
+// 		}
+// 		else if (bNeedSwitch || bStateChanged)
+// 		{
+// 			// 需要切换但不满足时间条件，输出原因
+// 			LOG("RunCmdShell: 跳过执行 - NeedSwitch=%d, TimeCondition=%d, Interval=%ds, PowerChange=%d, StateChanged=%d", 
+// 				bNeedSwitch, bTimeCondition, intervalSeconds, bPowerStatusChange, bStateChanged);
+// 		}
+// 	}
+	
+// 	// 检查并启动进程
+// 	if (!processname.IsEmpty())
+// 	{
+// 		// 降低检查频率? 不，进程检查轻量级
+// 		// 修复: 检查 processpath 而不是 processcmdpath (后者是完整命令行，不是文件路径)
+// 		if (FindProcessIDByName(processname.GetString()) == 0 && FileExists(processpath))
+// 		{
+// 			// 防止连续启动尝试，也加上冷却时间? 
+// 			// ProcessIDByName返回0说明没运行，应该启动。
+// 			// 如果启动失败，我们不希望死循环。
+// 			static int lastProcExecTime = 0;
+// 			if (abs(curTime - lastProcExecTime) > 10) 
+// 			{
+// 				LOG("RunCmdShell: 检测到进程[%s]未运行, 正在启动...", processname.GetString());
+// 				LOG("RunCmdShell: 执行命令: %s", processcmdpath.GetString());
+// 				int result = WinExec(processcmdpath, procshowcmd);
+// 				if (result > 31)
+// 					LOG("RunCmdShell: 进程启动成功 (返回值=%d)", result);
+// 				else
+// 					LOG("RunCmdShell: 进程启动失败 (错误码=%d)", result);
+// 				lastProcExecTime = curTime;
+// 			}
+// 		}
+// 		else if (FindProcessIDByName(processname.GetString()) == 0 && !FileExists(processpath))
+// 		{
+// 			// 进程不存在且文件路径也不存在，记录警告
+// 			static int lastWarningTime = 0;
+// 			if (abs(curTime - lastWarningTime) > 60) // 每60秒警告一次
+// 			{
+// 				LOG("RunCmdShell: 警告 - 进程[%s]未运行，但文件路径不存在: %s", 
+// 					processname.GetString(), processpath.GetString());
+// 				lastWarningTime = curTime;
+// 			}
+// 		}
+// 	}
+	
+// 	return FALSE; // 未执行切换
+// }
+
 BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 {
-	CString dirPath = GetExePath();
-	CString inipath = dirPath + "\\MyFanconfig.ini";
-	
-	// 检查配置文件是否存在
-	if (!FileExists(inipath))
-	{
-		return FALSE;
-	}
-	
-	// 读取CmdShell配置
-	char returnValue[100];
-	CString cmdpath, runcmd, runcmdpath;
-	int runcmdshow = SW_SHOWMINIMIZED;
-	
-	GetPrivateProfileString("cmdshell", "filepath", 0, returnValue, 100, inipath);
-	cmdpath = returnValue;
-	GetPrivateProfileString("cmdshell", "runcmd", 0, returnValue, 100, inipath);
-	runcmd = returnValue;
-	runcmdpath = runcmd + " " + cmdpath;
-	GetPrivateProfileString("cmdshell", "showcmd", 0, returnValue, 100, inipath);
-	runcmdshow = atoi(returnValue);
+    CString dirPath = GetExePath();
+    CString inipath = dirPath + "\\MyFanconfig.ini";
+
+    if (!FileExists(inipath))
+        return FALSE;
+
+    // ---------------- 读取 CmdShell 配置 ----------------
+    char returnValue[100] = {0};
+    CString cmdpath, runcmd, runcmdpath;
+    int runcmdshow = SW_SHOWMINIMIZED;
+
+    GetPrivateProfileString("cmdshell", "filepath", "", returnValue, 100, inipath);
+    cmdpath = returnValue;
+    GetPrivateProfileString("cmdshell", "runcmd", "", returnValue, 100, inipath);
+    runcmd = returnValue;
+    runcmdpath = runcmd + " " + cmdpath;
+    GetPrivateProfileString("cmdshell", "showcmd", "2", returnValue, 100, inipath);
+    runcmdshow = atoi(returnValue);
 	
 	// 读取进程检查配置
 	CString processname, processpath, processcmd, processcmdpath;
@@ -2303,76 +2462,124 @@ BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 	GetPrivateProfileString("processcheck", "procshowcmd", 0, returnValue, 100, inipath);
 	procshowcmd = atoi(returnValue);
 	
-	// 获取当前电池和显示状态
-	int battery_ACLine = GetBatteryACLineStatus();
-	int dmFrequency = GetDisplayFrequency();
-	
-	// 防止频繁执行的简单的冷却计时器
-	static int lastExecTime = 0;
-	int curTime = GetTime();
-	
-	// 状态记忆：记录上次检测到的AC和Freq状态
-	static int lastKnownACLine = -1;
-	static int lastKnownFreq = -1;
-	
-	// 执行显示模式切换命令
-	// 逻辑:
-	// 1. 强制执行
-	// 2. 电池模式(AC=0) 且 屏幕频率不是60Hz -> 切换(预期切到60Hz)
-	// 3. 电源模式(AC=1) 且 屏幕频率是60Hz -> 切换(预期切到高刷)
-	bool bNeedSwitch = false;
-	
-	if (battery_ACLine == 0 && dmFrequency != 60)
-		bNeedSwitch = true;
-	else if (battery_ACLine == 1 && dmFrequency == 60)
-		bNeedSwitch = true;
-	
-	// 状态变化检测：只有当AC或Freq状态发生实际变化时，才认为需要重新尝试
-	bool bStateChanged = (battery_ACLine != lastKnownACLine) || (dmFrequency != lastKnownFreq);
-		
-	if (FileExists(cmdpath))
-	{
-		int intervalSeconds = 0;
-		GetTimeInterval(curTime, lastExecTime, &intervalSeconds);
-		intervalSeconds = abs(intervalSeconds); // 获取秒数差
+    // ---------------- 当前系统状态 ----------------
+    int battery_ACLine = GetBatteryACLineStatus();   // 0=电池 1=AC
+    int dmFrequency   = GetDisplayFrequency();       // Hz
 
-		// 执行条件：
-		// 1. 强制执行
-		// 2. 需要切换 且 电源刚变更(需间隔>3秒)
-		// 3. 需要切换 且 状态发生变化 且 轮询检查(需间隔>10秒)
-		// 移除了无状态变化时的自动重试，避免脚本失败时的无限循环
-		BOOL bTimeCondition = FALSE;
-		if (bPowerStatusChange)
+    static int  lastExecTime     = 0;
+    static int  lastKnownACLine  = -1;
+    static int  lastKnownFreq    = -1;
+    static BOOL s_waitingEffect  = FALSE;
+
+    int curTime = GetTime();
+
+    // ---------------- 是否需要切换 ----------------
+    bool bNeedSwitch = false;
+    if (battery_ACLine == 0 && dmFrequency != 60)
+        bNeedSwitch = true;
+    else if (battery_ACLine == 1 && dmFrequency == 60)
+        bNeedSwitch = true;
+
+    bool bStateChanged =
+        (battery_ACLine != lastKnownACLine) ||
+        (dmFrequency   != lastKnownFreq);
+
+    // ---------------- 等待脚本效果生效 ----------------
+    // 脚本刚执行完，但系统状态还没变 —— 这是正常的
+    if (s_waitingEffect)
+    {
+        if (bStateChanged)
+        {
+            LOG("RunCmdShell: 状态已生效 AC=%d Freq=%d",
+                battery_ACLine, dmFrequency);
+
+            lastKnownACLine = battery_ACLine;
+            lastKnownFreq   = dmFrequency;
+            s_waitingEffect = FALSE;
+        }
+        else
+        {
+            // 状态未生效前，彻底退出，不刷 skip 日志
+            return FALSE;
+        }
+    }
+
+    // ---------------- 调试日志 ----------------
+    if (bPowerStatusChange || bStateChanged)
+    {
+        LOG("RunCmdShell: 状态检查 AC=%d(上次=%d) Freq=%d(上次=%d)",
+            battery_ACLine, lastKnownACLine,
+            dmFrequency,   lastKnownFreq);
+        LOG("RunCmdShell: 标志 NeedSwitch=%d StateChanged=%d PowerChange=%d",
+            bNeedSwitch, bStateChanged, bPowerStatusChange);
+    }
+
+    // ---------------- 执行 CmdShell ----------------
+    if (FileExists(cmdpath))
+    {
+        int intervalSeconds = abs(curTime - lastExecTime);
+        BOOL bTimeCondition = FALSE;
+
+        if (bPowerStatusChange)
+        {
+            if (intervalSeconds > 3)
+                bTimeCondition = TRUE;
+        }
+        else if (bStateChanged)
+        {
+            if (intervalSeconds > 10)
+                bTimeCondition = TRUE;
+        }
+
+        // if (bForce || (bNeedSwitch && bTimeCondition))
+        // {
+        //     LOG("RunCmdShell: 触发执行 AC=%d Freq=%d Force=%d Interval=%ds",
+        //         battery_ACLine, dmFrequency, bForce, intervalSeconds);
+
+        //     int result = WinExec(runcmdpath, runcmdshow);
+        //     if (result > 31)
+        //         LOG("RunCmdShell: 脚本执行成功 (返回值=%d)", result);
+        //     else
+        //         LOG("RunCmdShell: 脚本执行失败 (错误码=%d)", result);
+
+        //     lastExecTime    = curTime;
+        //     s_waitingEffect = TRUE;   // ⭐关键：等待真实状态变化
+        //     return TRUE;
+        // }
+		BOOL bShouldRun = FALSE;
+
+		// 1. 强制
+		if (bForce)
 		{
-			if (intervalSeconds > 3) bTimeCondition = TRUE;
+			bShouldRun = TRUE;
 		}
-		else if (bStateChanged)
+		// 2. 电源状态发生变化 → 必执行一次
+		else if (bPowerStatusChange && bTimeCondition)
 		{
-			// 只有状态变化时才允许轮询重试
-			if (intervalSeconds > 10) bTimeCondition = TRUE;
+			bShouldRun = TRUE;
+		}
+		// 3. 非电源变化，但状态确实不匹配 → 允许补救
+		else if (bNeedSwitch && bTimeCondition)
+		{
+			bShouldRun = TRUE;
 		}
 
-		if (bForce || (bNeedSwitch && bTimeCondition))
+		if (bShouldRun)
 		{
-			// 只有在非强制执行时才记录日志(避免初始化时的刷屏? 其实初始化时也只是一次)
-			// 为了调试，我们总是记录
-			LOG("RunCmdShell: 触发切换. AC=%d, Freq=%d, Force=%d, PowerChange=%d, Inteval=%ds", 
+			LOG("RunCmdShell: 触发执行 AC=%d Freq=%d Force=%d PowerChange=%d Interval=%ds",
 				battery_ACLine, dmFrequency, bForce, bPowerStatusChange, intervalSeconds);
-			
+
 			int result = WinExec(runcmdpath, runcmdshow);
 			if (result > 31)
 				LOG("RunCmdShell: 脚本执行成功 (返回值=%d)", result);
 			else
 				LOG("RunCmdShell: 脚本执行失败 (错误码=%d)", result);
-			
-			lastExecTime = curTime;
-			// 更新状态记忆，防止在同一状态下重复执行
-			lastKnownACLine = battery_ACLine;
-			lastKnownFreq = dmFrequency;
-			return TRUE; // 成功执行
+
+			lastExecTime    = curTime;
+			s_waitingEffect = TRUE;
+			return TRUE;
 		}
 	}
-	
 	// 检查并启动进程
 	if (!processname.IsEmpty())
 	{
@@ -2408,9 +2615,10 @@ BOOL CCore::RunCmdShell(BOOL bForce, BOOL bPowerStatusChange)
 			}
 		}
 	}
-	
-	return FALSE; // 未执行切换
+
+    return FALSE;
 }
+
 
 // Profile Management Implementation
 
